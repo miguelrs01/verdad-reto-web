@@ -53,6 +53,11 @@
               <div class="mt-1"><input id="isActive" type="checkbox" class="h-5 w-5" checked /></div>
             </div>
 
+            <div>
+              <label class="block text-sm font-medium">Permitir demo gratuito</label>
+              <div class="mt-1"><input id="allowDemo" type="checkbox" class="h-5 w-5" /></div>
+            </div>
+
             <div class="col-span-3">
               <label class="block text-sm font-medium">Descripción</label>
               <input id="description" class="mt-1 block w-full rounded-md border px-3 py-2" placeholder="Descripción corta" />
@@ -109,6 +114,10 @@
           <option value="question">Pregunta</option>
           <option value="dare">Reto</option>
         </select>
+        <label class="flex items-center gap-2">
+          <input id="itemIsDemo" type="checkbox" class="rounded">
+          <span>Es item demo (gratuito)</span>
+        </label>
       </div>
       <div class="mt-4 flex justify-end gap-3">
         <button id="modalCancel" class="px-4 py-2 rounded border">Cancelar</button>
@@ -147,6 +156,7 @@
     const priceInput = document.getElementById('price');
     const iconInput = document.getElementById('icon');
     const isActiveInput = document.getElementById('isActive');
+    const allowDemoInput = document.getElementById('allowDemo');
     const questionsList = document.getElementById('questionsList');
     const daresList = document.getElementById('daresList');
     const modal = document.getElementById('modal');
@@ -156,6 +166,7 @@
     const itemText = document.getElementById('itemText');
     const itemCategory = document.getElementById('itemCategory');
     const itemType = document.getElementById('itemType');
+    const itemIsDemo = document.getElementById('itemIsDemo');
 
     let selectedPackId = null;
     let editingItemId = null;
@@ -226,6 +237,7 @@
       priceInput.value = p.price || '';
       iconInput.value = p.icon || '';
       isActiveInput.checked = !!p.isActive;
+      allowDemoInput.checked = !!p.allowDemo;
       await fetchItems(id);
     }
 
@@ -234,7 +246,7 @@
       const name = nameInput.value.trim();
       if(!name) { alert('Escribe un nombre'); return; }
       const id = name.toLowerCase().replace(/\s+/g,'_');
-      const payload = { id, name, description: descInput.value, price: priceInput.value, icon: iconInput.value, isActive: isActiveInput.checked };
+      const payload = { id, name, description: descInput.value, price: priceInput.value, icon: iconInput.value, isActive: isActiveInput.checked, allowDemo: allowDemoInput.checked };
       await setDoc(doc(db, 'packs', id), payload, { merge: true });
       await fetchPacks();
       selectPack(id);
@@ -261,6 +273,7 @@
       priceInput.value='';
       iconInput.value='';
       isActiveInput.checked = true;
+      allowDemoInput.checked = false;
       questionsList.innerHTML='';
       daresList.innerHTML='';
     }
@@ -283,7 +296,7 @@
 		const node = document.createElement('div');
 		node.className = 'p-2 rounded-md border flex justify-between items-start gap-2';
 		node.innerHTML = `<div>
-							<div class="font-medium">${escapeHtml(it.text)}</div>
+							<div class="font-medium">${escapeHtml(it.text)} ${it.isDemo ? '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">DEMO</span>' : ''}</div>
 							<div class="text-xs text-slate-500">${escapeHtml(it.category)}</div>
 						  </div>
 						  <div class="flex gap-2">
@@ -307,18 +320,18 @@
 
     function openModal(){ modal.classList.remove('hidden'); modal.style.display='flex'; }
     function closeModal(){ modal.classList.add('hidden'); modal.style.display='none'; }
-    function openNewItem(type){ editingItemId=null; itemType.value=type; itemText.value=''; itemCategory.value=''; modalTitle.textContent = type==='question'?'Nueva Pregunta':'Nuevo Reto'; openModal(); }
-    async function openEditItem(itemId){ const d=await getDoc(doc(db,'gameItems',itemId)); if(!d.exists()) return; const it=d.data(); editingItemId=itemId; itemText.value=it.text||''; itemCategory.value=it.category||''; itemType.value=it.type||'question'; modalTitle.textContent='Editar item'; openModal(); }
+    function openNewItem(type){ editingItemId=null; itemType.value=type; itemText.value=''; itemCategory.value=''; itemIsDemo.checked=false; modalTitle.textContent = type==='question'?'Nueva Pregunta':'Nuevo Reto'; openModal(); }
+    async function openEditItem(itemId){ const d=await getDoc(doc(db,'gameItems',itemId)); if(!d.exists()) return; const it=d.data(); editingItemId=itemId; itemText.value=it.text||''; itemCategory.value=it.category||''; itemType.value=it.type||'question'; itemIsDemo.checked=!!it.isDemo; modalTitle.textContent='Editar item'; openModal(); }
 
     modalCancel.addEventListener('click', closeModal);
     modalSave.addEventListener('click', async ()=>{
-      const text=itemText.value.trim(), category=itemCategory.value.trim(), type=itemType.value;
+      const text=itemText.value.trim(), category=itemCategory.value.trim(), type=itemType.value, isDemo=itemIsDemo.checked;
       if(!text||!category) return alert('Completa todos los campos');
       if(!selectedPackId) return alert('Selecciona un pack primero');
       if(editingItemId){
-        await updateDoc(doc(db,'gameItems',editingItemId),{text,category,type});
+        await updateDoc(doc(db,'gameItems',editingItemId),{text,category,type,isDemo});
       } else {
-        await addDoc(collection(db,'gameItems'),{packId:selectedPackId,type,text,category});
+        await addDoc(collection(db,'gameItems'),{packId:selectedPackId,type,text,category,isDemo});
       }
       closeModal();
       fetchItems(selectedPackId);
