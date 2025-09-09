@@ -158,12 +158,18 @@
         <div class="data-info">
             <h3>📋 Datos que se eliminarán permanentemente:</h3>
             <ul>
-                <li><strong>Información de cuenta:</strong> Email, perfil de usuario, preferencias</li>
-                <li><strong>Historial de compras:</strong> Packs adquiridos, transacciones realizadas</li>
-                <li><strong>Estadísticas de juego:</strong> Partidas jugadas, puntuaciones, logros</li>
-                <li><strong>Datos de autenticación:</strong> Credenciales de acceso y tokens</li>
-                <li><strong>Información de pago:</strong> Métodos de pago guardados (procesados por Stripe)</li>
-                <li><strong>Caché local:</strong> Datos almacenados en tu dispositivo</li>
+                <li><strong>Información de cuenta:</strong> Email, perfil de usuario, preferencias, configuración</li>
+                <li><strong>Sistema de referidos:</strong> Código de referido personal, usuarios referidos, estadísticas de referidos</li>
+                <li><strong>Historial de compras:</strong> Packs adquiridos, transacciones realizadas, historial de Stripe</li>
+                <li><strong>Packs y contenido:</strong> Packs desbloqueados, packs por referidos, progreso de desbloqueo</li>
+                <li><strong>Estadísticas de juego:</strong> Partidas jugadas, puntuaciones, logros, configuraciones de ronda</li>
+                <li><strong>Sistema de sugerencias:</strong> Sugerencias enviadas, estado de aprobación, contador de aceptadas</li>
+                <li><strong>Datos de migración:</strong> Información de migración automática, timestamps, versiones</li>
+                <li><strong>Datos de autenticación:</strong> Credenciales de acceso, tokens, información de dispositivos</li>
+                <li><strong>Información de pago:</strong> Métodos de pago guardados, sesiones de checkout (procesados por Stripe)</li>
+                <li><strong>Datos de seguimiento:</strong> IP conocidas, ID de dispositivos, timestamps de actividad</li>
+                <li><strong>Caché local:</strong> Datos almacenados en tu dispositivo, preferencias locales</li>
+                <li><strong>Notificaciones:</strong> Configuración de notificaciones, historial de notificaciones</li>
             </ul>
         </div>
         
@@ -265,9 +271,18 @@
                 `Por favor, respondan a este email confirmando que desean proceder con la eliminación.\n` +
                 `Una vez confirmado, procederán con la eliminación de mi cuenta y todos los datos asociados.\n\n` +
                 `DATOS A ELIMINAR:\n` +
-                `- Información de cuenta (email, perfil, preferencias)\n` +
-                `- Historial de compras y transacciones\n` +
-                `- Datos de juego y estadísticas\n` +
+                `- Información de cuenta (email, perfil, preferencias, configuración)\n` +
+                `- Sistema de referidos (código personal, usuarios referidos, estadísticas)\n` +
+                `- Historial de compras y transacciones (packs, Stripe)\n` +
+                `- Packs y contenido (desbloqueados, por referidos, progreso)\n` +
+                `- Datos de juego y estadísticas (partidas, puntuaciones, logros)\n` +
+                `- Sistema de sugerencias (enviadas, aprobadas, contador)\n` +
+                `- Datos de migración (automática, timestamps, versiones)\n` +
+                `- Datos de autenticación (credenciales, tokens, dispositivos)\n` +
+                `- Información de pago (métodos guardados, sesiones checkout)\n` +
+                `- Datos de seguimiento (IPs, dispositivos, actividad)\n` +
+                `- Caché local y preferencias del dispositivo\n` +
+                `- Configuración y historial de notificaciones\n` +
                 `- Cualquier otro dato personal almacenado\n\n` +
                 `Entiendo que esta acción es irreversible.\n\n` +
                 `Fecha de solicitud: ${new Date().toLocaleString()}`
