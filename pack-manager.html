@@ -267,32 +267,43 @@
 
     // ------------------- CRUD ITEMS -------------------
     async function fetchItems(packId) {
-      questionsList.innerHTML = 'Cargando...';
-      daresList.innerHTML = 'Cargando...';
-      const qSnap = await getDocs(query(collection(db, 'gameItems'), where('packId','==',packId)));
-      questionsList.innerHTML = '';
-      daresList.innerHTML = '';
-      qSnap.forEach(d=>{
-        const it = d.data(), id = d.id;
-        const node = document.createElement('div');
-        node.className = 'p-2 rounded-md border flex justify-between items-start gap-2';
-        node.innerHTML = `<div><div class="font-medium">${escapeHtml(it.text)}</div><div class="text-xs text-slate-500">${escapeHtml(it.category)}</div></div>
-                          <div class="flex gap-2">
-                            <button data-id="${id}" class="editBtn text-sm px-2 py-1 rounded bg-yellow-400">Editar</button>
-                            <button data-id="${id}" class="delBtn text-sm px-2 py-1 rounded bg-red-500 text-white">Eliminar</button>
-                          </div>`;
-        const parent = it.type === 'question' ? questionsList : daresList;
-        parent.appendChild(node);
-      });
+	  questionsList.innerHTML = 'Cargando...';
+	  daresList.innerHTML = 'Cargando...';
 
-      document.querySelectorAll('.editBtn').forEach(b=> b.addEventListener('click', ()=>openEditItem(b.dataset.id)));
-      document.querySelectorAll('.delBtn').forEach(b=> b.addEventListener('click', async ()=> {
-        if(confirm('Eliminar item?')){
-          await deleteDoc(doc(db,'gameItems',b.dataset.id));
-          fetchItems(selectedPackId);
-        }
-      }));
-    }
+	  const qSnap = await getDocs(query(collection(db, 'gameItems'), where('packId', '==', packId)));
+	  
+	  // Limpiar listas
+	  questionsList.innerHTML = '';
+	  daresList.innerHTML = '';
+
+	  qSnap.forEach(d => {
+		const it = d.data();
+		const id = d.id;
+
+		const node = document.createElement('div');
+		node.className = 'p-2 rounded-md border flex justify-between items-start gap-2';
+		node.innerHTML = `<div>
+							<div class="font-medium">${escapeHtml(it.text)}</div>
+							<div class="text-xs text-slate-500">${escapeHtml(it.category)}</div>
+						  </div>
+						  <div class="flex gap-2">
+							<button data-id="${id}" class="editBtn text-sm px-2 py-1 rounded bg-yellow-400">Editar</button>
+							<button data-id="${id}" class="delBtn text-sm px-2 py-1 rounded bg-red-500 text-white">Eliminar</button>
+						  </div>`;
+
+		if(it.type === 'question') questionsList.appendChild(node);
+		else if(it.type === 'dare') daresList.appendChild(node);
+	  });
+
+	  // Attach handlers
+	  document.querySelectorAll('.editBtn').forEach(b => b.addEventListener('click', ()=> openEditItem(b.dataset.id)));
+	  document.querySelectorAll('.delBtn').forEach(b => b.addEventListener('click', async ()=>{
+		if(confirm('Eliminar item?')){
+		  await deleteDoc(doc(db, 'gameItems', b.dataset.id));
+		  fetchItems(packId);
+		}
+	  }));
+	}
 
     function openModal(){ modal.classList.remove('hidden'); modal.style.display='flex'; }
     function closeModal(){ modal.classList.add('hidden'); modal.style.display='none'; }
