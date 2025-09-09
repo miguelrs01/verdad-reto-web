@@ -1,16 +1,149 @@
-<!DOCTYPE html>
+<!--
+Pack Creator - Versión web lista para GitHub Pages + Código Python Tkinter mejorado
+
+Instrucciones rápidas:
+1) Rellena la sección `const firebaseConfig = { ... }` con la configuración de tu proyecto Firebase (apiKey, authDomain, projectId, etc.).
+2) Ajusta las reglas de Firestore para permitir lectura/escritura desde la web (recomendado usar Firebase Authentication y reglas seguras para producción).
+3) Sube este archivo `index.html` a tu repo y activa GitHub Pages en la rama/ubicación que elijas.
+
+Nota de seguridad: Esta app usa Firebase client-side. No subas credenciales sensibles ni service accounts al cliente. Para operaciones administrativas (p. ej. creación de packs por personal autorizado), considera usar Cloud Functions o verificar el usuario con Firebase Auth y reglas en Firestore.
+-->
+
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Pack Manager</title>
-  <script type="module">
-    // Import Firebase SDK
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pack Creator Admin — Web</title>
+  <!-- TailwindCSS CDN para estilo rápido y moderno -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Pequeños ajustes visuales */
+    .glass { background: rgba(255,255,255,0.7); backdrop-filter: blur(6px); }
+    .scrollbar-thin::-webkit-scrollbar { height: 8px; width: 8px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(0,0,0,0.2);} 
+  </style>
+</head>
+<body class="bg-gradient-to-br from-sky-50 to-white min-h-screen text-slate-800">
+  <div class="max-w-7xl mx-auto p-6">
+    <header class="mb-6 flex items-center justify-between">
+      <h1 class="text-2xl font-extrabold">Pack Creator Admin</h1>
+      <div class="text-sm text-slate-600">Desplegable en GitHub Pages · Firestore (client-side)</div>
+    </header>
 
-    // ⚠️ Reemplazar con tus variables inyectadas por Vite o escribir a mano
+	<div id="loginSection" class="hidden p-6 max-w-md mx-auto">
+	  <h2 class="text-xl font-bold mb-2">Acceso restringido</h2>
+	  <input id="loginEmail" type="email" placeholder="Email" class="border rounded px-2 py-1 mb-2 w-full"/>
+	  <input id="loginPassword" type="password" placeholder="Password" class="border rounded px-2 py-1 mb-2 w-full"/>
+	  <button id="loginBtn" class="bg-sky-600 text-white px-3 py-2 rounded">Entrar</button>
+	  <div id="loginError" class="text-red-500 text-sm mt-2"></div>
+	</div>
+
+    <main class="grid grid-cols-12 gap-6">
+      <!-- Sidebar: Packs -->
+      <aside class="col-span-3">
+        <div class="p-4 rounded-2xl shadow-md glass">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-semibold">Packs</h2>
+            <button id="btnRefresh" class="px-3 py-1 text-sm rounded bg-sky-600 text-white hover:bg-sky-700">Refrescar</button>
+          </div>
+          <div id="packsList" class="space-y-2 max-h-[60vh] overflow-auto scrollbar-thin"></div>
+          <hr class="my-3" />
+          <button id="btnNewPack" class="w-full py-2 rounded-lg border border-dashed border-slate-200 hover:bg-slate-50">+ Nuevo Pack</button>
+        </div>
+      </aside>
+
+      <!-- Editor + Items -->
+      <section class="col-span-9">
+        <div class="p-6 rounded-2xl shadow-md glass">
+          <form id="packForm" class="grid grid-cols-3 gap-4 items-end">
+            <div class="col-span-2">
+              <label class="block text-sm font-medium">Nombre</label>
+              <input id="name" class="mt-1 block w-full rounded-md border px-3 py-2" placeholder="Nombre del pack" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium">Activo</label>
+              <div class="mt-1"><input id="isActive" type="checkbox" class="h-5 w-5" checked /></div>
+            </div>
+
+            <div class="col-span-3">
+              <label class="block text-sm font-medium">Descripción</label>
+              <input id="description" class="mt-1 block w-full rounded-md border px-3 py-2" placeholder="Descripción corta" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium">Precio</label>
+              <input id="price" class="mt-1 block w-full rounded-md border px-3 py-2" placeholder="e.g. 1.99" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium">Icono</label>
+              <input id="icon" class="mt-1 block w-full rounded-md border px-3 py-2" placeholder="emoji o nombre" />
+            </div>
+
+            <div class="flex gap-2 col-span-3">
+              <button id="btnSavePack" class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700">Guardar pack</button>
+              <button id="btnDeletePack" type="button" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Eliminar pack</button>
+              <div id="packIdDisplay" class="ml-auto text-sm text-slate-500 self-center"></div>
+            </div>
+          </form>
+
+          <div class="mt-6 grid grid-cols-2 gap-4">
+            <!-- Preguntas -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="font-semibold">Preguntas</h3>
+                <div class="space-x-2">
+                  <button id="btnAddQuestion" class="text-sm px-3 py-1 rounded bg-indigo-600 text-white">Añadir</button>
+                </div>
+              </div>
+              <div id="questionsList" class="max-h-[40vh] overflow-auto scrollbar-thin space-y-2"></div>
+            </div>
+
+            <!-- Retos -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="font-semibold">Retos</h3>
+                <div class="space-x-2">
+                  <button id="btnAddDare" class="text-sm px-3 py-1 rounded bg-rose-600 text-white">Añadir</button>
+                </div>
+              </div>
+              <div id="daresList" class="max-h-[40vh] overflow-auto scrollbar-thin space-y-2"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="mt-6 text-sm text-slate-500">Recuerda configurar Firestore (security rules) y la <code>firebaseConfig</code> antes de publicar.</footer>
+  </div>
+
+  <!-- Modal simple para añadir/editar item -->
+  <div id="modal" class="fixed inset-0 hidden items-center justify-center bg-black/40">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-xl shadow-lg">
+      <h4 id="modalTitle" class="font-semibold mb-2">Editor</h4>
+      <div class="space-y-3">
+        <input id="itemText" placeholder="Texto" class="w-full rounded border px-3 py-2" />
+        <input id="itemCategory" placeholder="Categoría" class="w-full rounded border px-3 py-2" />
+        <select id="itemType" class="w-full rounded border px-3 py-2">
+          <option value="question">Pregunta</option>
+          <option value="dare">Reto</option>
+        </select>
+      </div>
+      <div class="mt-4 flex justify-end gap-3">
+        <button id="modalCancel" class="px-4 py-2 rounded border">Cancelar</button>
+        <button id="modalSave" class="px-4 py-2 rounded bg-sky-600 text-white">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK (modular) -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js'
+    import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, query, where } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js'
+	import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+
+    // --- RELLENA con tu firebase config ---
     const firebaseConfig = {
       apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
       authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -20,96 +153,237 @@
       appId: import.meta.env.VITE_FIREBASE_APP_ID
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig)
+    const db = getFirestore(app)
+	const auth = getAuth(app);
+	
+    // Utilidades DOM
+    const packsList = document.getElementById('packsList')
+    const btnRefresh = document.getElementById('btnRefresh')
+    const btnNewPack = document.getElementById('btnNewPack')
+    const btnSavePack = document.getElementById('btnSavePack')
+    const btnDeletePack = document.getElementById('btnDeletePack')
+    const packIdDisplay = document.getElementById('packIdDisplay')
 
-    // DOM elements
-    const loginForm = document.getElementById("login-form");
-    const appContainer = document.getElementById("app");
-    const errorBox = document.getElementById("error-box");
+    const nameInput = document.getElementById('name')
+    const descInput = document.getElementById('description')
+    const priceInput = document.getElementById('price')
+    const iconInput = document.getElementById('icon')
+    const isActiveInput = document.getElementById('isActive')
 
-    // 1️⃣ Verificar si el portal está habilitado
-    async function checkAccessEnabled() {
-      const configRef = doc(db, "config", "portal");
-      const snap = await getDoc(configRef);
-      if (!snap.exists() || snap.data().enabled !== true) {
-        document.body.innerHTML = "<h2>Acceso deshabilitado temporalmente</h2>";
-        throw new Error("Portal deshabilitado");
-      }
+    const questionsList = document.getElementById('questionsList')
+    const daresList = document.getElementById('daresList')
+
+    const modal = document.getElementById('modal')
+    const modalTitle = document.getElementById('modalTitle')
+    const modalCancel = document.getElementById('modalCancel')
+    const modalSave = document.getElementById('modalSave')
+    const itemText = document.getElementById('itemText')
+    const itemCategory = document.getElementById('itemCategory')
+    const itemType = document.getElementById('itemType')
+
+    // Estado local
+    let selectedPackId = null
+    let editingItemId = null
+	
+
+
+	// Verifica si el portal está habilitado
+	async function checkPortalAccess(){
+	  const settingsRef = doc(db, "portalConfig", "settings");
+	  const snap = await getDoc(settingsRef);
+	  if(!snap.exists()){
+		document.body.innerHTML = "<p class='p-6 text-red-600'>⚠️ Configuración no encontrada</p>";
+		return;
+	  }
+	  const cfg = snap.data();
+	  if(!cfg.portalEnabled){
+		document.body.innerHTML = "<p class='p-6 text-slate-600'>🚫 Portal desactivado</p>";
+		return;
+	  }
+	  // Mostrar login si habilitado
+	  document.getElementById("loginSection").classList.remove("hidden");
+	}
+
+	checkPortalAccess();
+
+	// Login handler
+	document.getElementById("loginBtn").addEventListener("click", async ()=>{
+	  const email = document.getElementById("loginEmail").value;
+	  const pass = document.getElementById("loginPassword").value;
+	  try {
+		const cred = await signInWithEmailAndPassword(auth, email, pass);
+		const user = cred.user;
+		// Relee settings para obtener allowedEmails
+		const settingsRef = doc(db, "portalConfig", "settings");
+		const snap = await getDoc(settingsRef);
+		const allowed = snap.data().allowedEmails || [];
+		if(!allowed.includes(user.email)){
+		  await signOut(auth);
+		  document.getElementById("loginError").innerText = "No tienes permisos para acceder.";
+		  return;
+		}
+		// ✅ Usuario autorizado → muestra UI principal
+		document.getElementById("loginSection").classList.add("hidden");
+		document.querySelector("main").classList.remove("hidden");
+		fetchPacks();
+	  } catch(err){
+		document.getElementById("loginError").innerText = err.message;
+	  }
+	});
+
+
+    // --- CRUD packs ---
+    async function fetchPacks(){
+      packsList.innerHTML = 'Cargando...'
+      const snap = await getDocs(collection(db, 'packs'))
+      packsList.innerHTML = ''
+      snap.forEach(d => {
+        const pack = d.data()
+        const id = d.id
+        const node = document.createElement('div')
+        node.className = 'p-3 rounded-lg hover:bg-slate-50 flex justify-between items-center cursor-pointer'
+        node.innerHTML = `<div><div class="font-medium">${escapeHtml(pack.name||id)}</div><div class="text-xs text-slate-500">${escapeHtml(pack.description||'')}</div></div><div class="text-sm">${pack.isActive? '✅': '❌'}</div>`
+        node.addEventListener('click', ()=> selectPack(id))
+        packsList.appendChild(node)
+      })
     }
 
-    // 2️⃣ Login
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = e.target.email.value;
-      const password = e.target.password.value;
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (err) {
-        errorBox.textContent = "Error al iniciar sesión: " + err.message;
-      }
-    });
-
-    // 3️⃣ Restricción de usuarios
-    async function checkAllowedUser(uid) {
-      const allowedRef = doc(db, "allowedUsers", uid);
-      const snap = await getDoc(allowedRef);
-      return snap.exists();
+    async function selectPack(id){
+      selectedPackId = id
+      packIdDisplay.textContent = id
+      const d = await getDoc(doc(db, 'packs', id))
+      if(!d.exists()) return
+      const p = d.data()
+      nameInput.value = p.name || ''
+      descInput.value = p.description || ''
+      priceInput.value = p.price || ''
+      iconInput.value = p.icon || ''
+      isActiveInput.checked = !!p.isActive
+      await fetchItems(id)
     }
 
-    // 4️⃣ Escuchar cambios de auth
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        loginForm.style.display = "block";
-        appContainer.style.display = "none";
-        return;
+    async function savePack(e){
+      e.preventDefault()
+      const name = nameInput.value.trim()
+      if(!name) { alert('Escribe un nombre'); return }
+      const id = (name.toLowerCase().replace(/\s+/g,'_'))
+      const payload = {
+        id,
+        name,
+        description: descInput.value,
+        price: priceInput.value,
+        icon: iconInput.value,
+        isActive: isActiveInput.checked
       }
-      // Validar si está permitido
-      const ok = await checkAllowedUser(user.uid);
-      if (!ok) {
-        errorBox.textContent = "Tu usuario no tiene permisos para acceder.";
-        await auth.signOut();
-        return;
-      }
-
-      // Mostrar app
-      loginForm.style.display = "none";
-      appContainer.style.display = "block";
-      loadPacks();
-    });
-
-    // 5️⃣ Cargar packs
-    async function loadPacks() {
-      const querySnap = await getDocs(collection(db, "packs"));
-      const list = document.getElementById("packs-list");
-      list.innerHTML = "";
-      querySnap.forEach((doc) => {
-        const data = doc.data();
-        const li = document.createElement("li");
-        li.textContent = `${data.name} - ${data.isActive ? "✅" : "❌"}`;
-        list.appendChild(li);
-      });
+      await setDoc(doc(db, 'packs', id), payload, { merge: true })
+      await fetchPacks()
+      selectPack(id)
+      alert('Pack guardado')
     }
 
-    // Inicio
-    checkAccessEnabled();
+    async function deletePack(){
+      if(!selectedPackId) return alert('Selecciona un pack')
+      if(!confirm('¿Eliminar pack y sus items?')) return
+      // borrar items relacionados
+      const itemsQ = query(collection(db, 'gameItems'), where('packId','==',selectedPackId))
+      const itemsSnap = await getDocs(itemsQ)
+      for(const it of itemsSnap.docs) await deleteDoc(doc(db, 'gameItems', it.id))
+      await deleteDoc(doc(db, 'packs', selectedPackId))
+      selectedPackId = null
+      packIdDisplay.textContent = ''
+      clearForm()
+      await fetchPacks()
+      alert('Eliminado')
+    }
+
+    function clearForm(){
+      nameInput.value=''
+      descInput.value=''
+      priceInput.value=''
+      iconInput.value=''
+      isActiveInput.checked = true
+      questionsList.innerHTML=''
+      daresList.innerHTML=''
+    }
+
+    // --- Items ---
+    async function fetchItems(packId){
+      questionsList.innerHTML = 'Cargando...'
+      daresList.innerHTML = ''
+      const qSnap = await getDocs(query(collection(db, 'gameItems'), where('packId','==',packId)))
+      questionsList.innerHTML = ''
+      daresList.innerHTML = ''
+      qSnap.forEach(d=>{
+        const it = d.data(); const id = d.id
+        const node = document.createElement('div')
+        node.className = 'p-2 rounded-md border flex justify-between items-start gap-2'
+        node.innerHTML = `<div><div class="font-medium">${escapeHtml(it.text)}</div><div class="text-xs text-slate-500">${escapeHtml(it.category)}</div></div><div class="flex gap-2"><button data-id="${id}" class="editBtn text-sm px-2 py-1 rounded bg-yellow-400">Editar</button><button data-id="${id}" class="delBtn text-sm px-2 py-1 rounded bg-red-500 text-white">Eliminar</button></div>`
+        const parent = it.type === 'question' ? questionsList : daresList
+        parent.appendChild(node)
+      })
+      // attach handlers
+      document.querySelectorAll('.editBtn').forEach(b=> b.addEventListener('click', ()=>openEditItem(b.dataset.id)))
+      document.querySelectorAll('.delBtn').forEach(b=> b.addEventListener('click', async ()=>{ if(confirm('Eliminar item?')){ await deleteDoc(doc(db,'gameItems',b.dataset.id)); fetchItems(selectedPackId) }}))
+    }
+
+    function openModal(){ modal.classList.remove('hidden'); modal.style.display='flex' }
+    function closeModal(){ modal.classList.add('hidden'); modal.style.display='none' }
+
+    function openNewItem(type){
+      editingItemId = null
+      itemType.value = type
+      itemText.value = ''
+      itemCategory.value = ''
+      modalTitle.textContent = type === 'question' ? 'Nueva Pregunta' : 'Nuevo Reto'
+      openModal()
+    }
+
+    async function openEditItem(itemId){
+      const d = await getDoc(doc(db,'gameItems', itemId))
+      if(!d.exists()) return
+      const it = d.data()
+      editingItemId = itemId
+      itemText.value = it.text || ''
+      itemCategory.value = it.category || ''
+      itemType.value = it.type || 'question'
+      modalTitle.textContent = 'Editar item'
+      openModal()
+    }
+
+    modalCancel.addEventListener('click', ()=> closeModal())
+
+    modalSave.addEventListener('click', async ()=>{
+      const text = itemText.value.trim(); const category = itemCategory.value.trim(); const type = itemType.value
+      if(!text||!category) return alert('Completa todos los campos')
+      if(!selectedPackId) return alert('Selecciona un pack primero')
+      if(editingItemId){
+        await updateDoc(doc(db,'gameItems',editingItemId), { text, category, type })
+      } else {
+        await addDoc(collection(db,'gameItems'), { packId: selectedPackId, type, text, category })
+      }
+      closeModal(); fetchItems(selectedPackId)
+    })
+
+    // Eventlisteners
+    btnRefresh.addEventListener('click', ()=> fetchPacks())
+    btnNewPack.addEventListener('click', ()=> { clearForm(); selectedPackId = null; packIdDisplay.textContent='(nuevo)'; })
+    btnSavePack.addEventListener('click', savePack)
+    btnDeletePack.addEventListener('click', deletePack)
+    document.getElementById('btnAddQuestion').addEventListener('click', ()=> openNewItem('question'))
+    document.getElementById('btnAddDare').addEventListener('click', ()=> openNewItem('dare'))
+
+    // Inicial
+    fetchPacks()
+
+    // Pequeña función de escape para evitar XSS al inyectar texto
+    function escapeHtml(text){
+      if(!text) return ''
+      return String(text).replace(/[&<>\"']/g, function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','\\"':'&quot;','\'':'&#39;'}[m]})
+    }
+
   </script>
-</head>
-<body>
-  <div id="error-box" style="color:red"></div>
 
-  <!-- Login -->
-  <form id="login-form" style="display:none">
-    <input type="email" name="email" placeholder="Email" required />
-    <input type="password" name="password" placeholder="Contraseña" required />
-    <button type="submit">Entrar</button>
-  </form>
 
-  <!-- App -->
-  <div id="app" style="display:none">
-    <h2>Packs</h2>
-    <ul id="packs-list"></ul>
-  </div>
 </body>
 </html>
