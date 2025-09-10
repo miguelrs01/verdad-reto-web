@@ -30,11 +30,11 @@
       <!-- Sidebar: Navigation -->
       <aside class="col-span-3">
         <!-- Navigation Tabs -->
-        <div class="mb-4 grid grid-cols-2 md:grid-cols-4 gap-1 rounded-lg bg-gray-100 p-1">
-          <button id="tabPacks" class="rounded-md py-2 px-2 text-xs md:text-sm font-medium bg-white shadow-sm">Packs</button>
-          <button id="tabSuggestions" class="rounded-md py-2 px-2 text-xs md:text-sm font-medium text-gray-500 hover:text-gray-700">Sugerencias</button>
-          <button id="tabIncidents" class="rounded-md py-2 px-2 text-xs md:text-sm font-medium text-gray-500 hover:text-gray-700">Incidencias</button>
-          <button id="tabStats" class="rounded-md py-2 px-2 text-xs md:text-sm font-medium text-gray-500 hover:text-gray-700">Estadísticas</button>
+        <div class="mb-6 flex flex-wrap gap-2">
+          <button id="tabPacks" class="px-4 py-2 rounded-lg font-medium bg-sky-600 text-white shadow-md hover:bg-sky-700 transition-colors">Packs</button>
+          <button id="tabSuggestions" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">Sugerencias</button>
+          <button id="tabIncidents" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">Incidencias</button>
+          <button id="tabStats" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">Estadísticas</button>
         </div>
         
         <!-- Packs Section -->
@@ -81,9 +81,6 @@
             </select>
           </div>
           <div id="incidentsList" class="space-y-2 max-h-[60vh] overflow-auto scrollbar-thin"></div>
-          <div class="mt-3 text-xs text-gray-600">
-            <div id="incidentStats">Cargando estadísticas...</div>
-          </div>
         </div>
         
         <!-- Statistics Section -->
@@ -326,33 +323,42 @@
           <div class="bg-white p-4 rounded-lg mb-6 hidden" id="incidentDetails">
             <h3 class="font-semibold mb-3">Detalles de la Incidencia</h3>
             
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700">ID</label>
+              <span id="incidentIdDisplay" class="text-sm text-gray-900 font-mono">(ninguna)</span>
+            </div>
+            
             <div class="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700">Usuario</label>
-                <span id="incidentUserEmail" class="text-sm text-gray-900"></span>
+                <span id="incidentUserDisplay" class="text-sm text-gray-900">-</span>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Fecha</label>
-                <span id="incidentDate" class="text-sm text-gray-900"></span>
+                <span id="incidentDateDisplay" class="text-sm text-gray-900">-</span>
               </div>
             </div>
             
             <div class="mb-4">
               <label class="block text-sm font-medium text-gray-700">Estado</label>
-              <select id="incidentStatus" class="mt-1 block w-full rounded-md border px-3 py-2">
-                <option value="pending">Pendiente</option>
-                <option value="in_review">En revisión</option>
-                <option value="resolved">Resuelta</option>
-              </select>
+              <span id="incidentStatusDisplay" class="text-sm text-gray-900">-</span>
             </div>
             
             <div class="mb-4">
               <label class="block text-sm font-medium text-gray-700">Descripción</label>
-              <div id="incidentDescription" class="mt-1 p-3 bg-gray-50 rounded border text-sm min-h-[100px]"></div>
+              <div id="incidentDescriptionDisplay" class="mt-1 p-3 bg-gray-50 rounded border text-sm min-h-[100px]">-</div>
+            </div>
+            
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Cambiar Estado</label>
+              <div class="flex gap-2">
+                <button id="btnMarkPending" class="px-3 py-1 text-sm rounded bg-red-100 text-red-800 hover:bg-red-200">Pendiente</button>
+                <button id="btnMarkInReview" class="px-3 py-1 text-sm rounded bg-yellow-100 text-yellow-800 hover:bg-yellow-200">En Revisión</button>
+                <button id="btnMarkResolved" class="px-3 py-1 text-sm rounded bg-green-100 text-green-800 hover:bg-green-200">Resuelta</button>
+              </div>
             </div>
             
             <div class="flex gap-3">
-              <button id="btnUpdateIncident" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Actualizar Estado</button>
               <button id="btnDeleteIncident" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Eliminar</button>
             </div>
           </div>
@@ -677,11 +683,14 @@
     function switchToTab(tab) {
       currentView = tab;
       
-      // Reset all tabs
-      tabPacks.className = 'rounded-md py-2 px-2 text-xs md:text-sm font-medium text-gray-500 hover:text-gray-700';
-      tabSuggestions.className = 'rounded-md py-2 px-2 text-xs md:text-sm font-medium text-gray-500 hover:text-gray-700';
-      tabIncidents.className = 'rounded-md py-2 px-2 text-xs md:text-sm font-medium text-gray-500 hover:text-gray-700';
-      tabStats.className = 'rounded-md py-2 px-2 text-xs md:text-sm font-medium text-gray-500 hover:text-gray-700';
+      // Reset all tabs to inactive state
+      const inactiveClass = 'px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors';
+      const activeClass = 'px-4 py-2 rounded-lg font-medium bg-sky-600 text-white shadow-md hover:bg-sky-700 transition-colors';
+      
+      tabPacks.className = inactiveClass;
+      tabSuggestions.className = inactiveClass;
+      tabIncidents.className = inactiveClass;
+      tabStats.className = inactiveClass;
       
       // Hide all sections
       packsSection.classList.add('hidden');
@@ -694,23 +703,23 @@
       statsManagement.classList.add('hidden');
       
       if (tab === 'packs') {
-        tabPacks.className = 'rounded-md py-2 px-2 text-xs md:text-sm font-medium bg-white shadow-sm';
+        tabPacks.className = activeClass;
         packsSection.classList.remove('hidden');
         packsManagement.classList.remove('hidden');
       } else if (tab === 'suggestions') {
-        tabSuggestions.className = 'rounded-md py-2 px-2 text-xs md:text-sm font-medium bg-white shadow-sm';
+        tabSuggestions.className = activeClass;
         suggestionsSection.classList.remove('hidden');
         suggestionsManagement.classList.remove('hidden');
         fetchSuggestions();
         loadPacksForSuggestions();
       } else if (tab === 'incidents') {
-        tabIncidents.className = 'rounded-md py-2 px-2 text-xs md:text-sm font-medium bg-white shadow-sm';
+        tabIncidents.className = activeClass;
         incidentsSection.classList.remove('hidden');
         incidentsManagement.classList.remove('hidden');
         fetchIncidents();
         loadIncidentStats();
       } else if (tab === 'stats') {
-        tabStats.className = 'rounded-md py-2 px-2 text-xs md:text-sm font-medium bg-white shadow-sm';
+        tabStats.className = activeClass;
         statsSection.classList.remove('hidden');
         statsManagement.classList.remove('hidden');
         loadDashboardData();
@@ -1157,6 +1166,9 @@
       incidentDateDisplay.textContent = incident.createdAt ? new Date(incident.createdAt.toMillis()).toLocaleDateString() : 'N/A';
       incidentStatusDisplay.textContent = getIncidentStatusText(incident.status);
       incidentDescriptionDisplay.textContent = incident.description;
+      
+      // Show incident details panel
+      document.getElementById('incidentDetails').classList.remove('hidden');
     }
     
     async function updateIncidentStatus(status) {
