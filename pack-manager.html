@@ -34,6 +34,7 @@
           <button id="tabPacks" class="flex-1 rounded-md py-2 px-3 text-sm font-medium bg-white shadow-sm">Packs</button>
           <button id="tabSuggestions" class="flex-1 rounded-md py-2 px-3 text-sm font-medium text-gray-500 hover:text-gray-700">Sugerencias</button>
           <button id="tabIncidents" class="flex-1 rounded-md py-2 px-3 text-sm font-medium text-gray-500 hover:text-gray-700">Incidencias</button>
+          <button id="tabStats" class="flex-1 rounded-md py-2 px-3 text-sm font-medium text-gray-500 hover:text-gray-700">Estadísticas</button>
         </div>
         
         <!-- Packs Section -->
@@ -82,6 +83,65 @@
           <div id="incidentsList" class="space-y-2 max-h-[60vh] overflow-auto scrollbar-thin"></div>
           <div class="mt-3 text-xs text-gray-600">
             <div id="incidentStats">Cargando estadísticas...</div>
+          </div>
+        </div>
+        
+        <!-- Statistics Section -->
+        <div id="statsSection" class="p-4 rounded-2xl shadow-md glass hidden">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-semibold">Estadísticas</h2>
+            <div class="flex gap-2">
+              <select id="statsTimeFilter" class="px-3 py-1 text-sm rounded border">
+                <option value="realtime">Tiempo Real</option>
+                <option value="day">Hoy</option>
+                <option value="month">Este Mes</option>
+                <option value="year">Este Año</option>
+              </select>
+              <button id="btnRefreshStats" class="px-3 py-1 text-sm rounded bg-sky-600 text-white hover:bg-sky-700">Refrescar</button>
+            </div>
+          </div>
+          
+          <!-- Statistics Cards -->
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="bg-blue-50 p-3 rounded-lg">
+              <div class="text-sm text-blue-600 font-medium">Usuarios Totales</div>
+              <div id="totalUsers" class="text-2xl font-bold text-blue-800">-</div>
+            </div>
+            <div class="bg-green-50 p-3 rounded-lg">
+              <div class="text-sm text-green-600 font-medium">Usuarios Activos</div>
+              <div id="activeUsers" class="text-2xl font-bold text-green-800">-</div>
+            </div>
+            <div class="bg-purple-50 p-3 rounded-lg">
+              <div class="text-sm text-purple-600 font-medium">Partidas Jugadas</div>
+              <div id="totalGames" class="text-2xl font-bold text-purple-800">-</div>
+            </div>
+            <div class="bg-yellow-50 p-3 rounded-lg">
+              <div class="text-sm text-yellow-600 font-medium">Demos Usados</div>
+              <div id="totalDemos" class="text-2xl font-bold text-yellow-800">-</div>
+            </div>
+          </div>
+          
+          <!-- User Type Breakdown -->
+          <div class="mb-4">
+            <h3 class="text-sm font-medium mb-2">Tipos de Usuario</h3>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="bg-gray-50 p-2 rounded text-center">
+                <div class="text-sm text-gray-600">Registrados</div>
+                <div id="registeredUsers" class="font-bold text-gray-800">-</div>
+              </div>
+              <div class="bg-gray-50 p-2 rounded text-center">
+                <div class="text-sm text-gray-600">Anónimos</div>
+                <div id="anonymousUsers" class="font-bold text-gray-800">-</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Most Played Packs -->
+          <div>
+            <h3 class="text-sm font-medium mb-2">Packs Más Jugados</h3>
+            <div id="mostPlayedPacks" class="space-y-1 max-h-32 overflow-auto">
+              <div class="text-center text-gray-500 py-2">Cargando...</div>
+            </div>
           </div>
         </div>
       </aside>
@@ -317,6 +377,106 @@
             </div>
           </div>
         </div>
+        
+        <!-- Statistics Management Section -->
+        <div id="statsManagement" class="p-6 rounded-2xl shadow-md glass hidden">
+          <h2 class="text-xl font-bold mb-4">Dashboard de Estadísticas</h2>
+          
+          <!-- Time Period Selector -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Período de Tiempo</label>
+            <div class="flex gap-2">
+              <select id="dashboardTimeFilter" class="px-4 py-2 rounded border">
+                <option value="realtime">Tiempo Real (últimos 5 min)</option>
+                <option value="day">Hoy</option>
+                <option value="month">Este Mes</option>
+                <option value="year">Este Año</option>
+              </select>
+              <button id="btnRefreshDashboard" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Actualizar</button>
+            </div>
+          </div>
+          
+          <!-- Main Statistics Grid -->
+          <div class="grid grid-cols-4 gap-4 mb-6">
+            <div class="bg-blue-50 p-4 rounded-lg text-center">
+              <div class="text-3xl font-bold text-blue-600" id="dashTotalUsers">-</div>
+              <div class="text-sm text-blue-600">Usuarios Totales</div>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg text-center">
+              <div class="text-3xl font-bold text-green-600" id="dashActiveUsers">-</div>
+              <div class="text-sm text-green-600">Usuarios Activos</div>
+            </div>
+            <div class="bg-purple-50 p-4 rounded-lg text-center">
+              <div class="text-3xl font-bold text-purple-600" id="dashTotalGames">-</div>
+              <div class="text-sm text-purple-600">Partidas Jugadas</div>
+            </div>
+            <div class="bg-yellow-50 p-4 rounded-lg text-center">
+              <div class="text-3xl font-bold text-yellow-600" id="dashTotalDemos">-</div>
+              <div class="text-sm text-yellow-600">Demos Usados</div>
+            </div>
+          </div>
+          
+          <!-- Secondary Statistics -->
+          <div class="grid grid-cols-2 gap-6 mb-6">
+            <!-- User Types -->
+            <div class="bg-white p-4 rounded-lg border">
+              <h3 class="font-semibold mb-3">Tipos de Usuario</h3>
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Registrados:</span>
+                  <span id="dashRegisteredUsers" class="font-semibold">-</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Anónimos:</span>
+                  <span id="dashAnonymousUsers" class="font-semibold">-</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Game Statistics -->
+            <div class="bg-white p-4 rounded-lg border">
+              <h3 class="font-semibold mb-3">Estadísticas de Juego</h3>
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Partidas por día:</span>
+                  <span id="dashGamesPerDay" class="font-semibold">-</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Demos por día:</span>
+                  <span id="dashDemosPerDay" class="font-semibold">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Most Played Packs Table -->
+          <div class="bg-white p-4 rounded-lg border">
+            <h3 class="font-semibold mb-3">Packs Más Jugados</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b">
+                    <th class="text-left py-2">Pack</th>
+                    <th class="text-right py-2">Veces Jugado</th>
+                  </tr>
+                </thead>
+                <tbody id="dashMostPlayedTable">
+                  <tr>
+                    <td colspan="2" class="text-center py-4 text-gray-500">Cargando...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Recent Events -->
+          <div class="bg-white p-4 rounded-lg border mt-6">
+            <h3 class="font-semibold mb-3">Eventos Recientes</h3>
+            <div id="recentEvents" class="space-y-2 max-h-64 overflow-auto">
+              <div class="text-center py-4 text-gray-500">Cargando eventos...</div>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
 
@@ -395,12 +555,15 @@
     const tabPacks = document.getElementById('tabPacks');
     const tabSuggestions = document.getElementById('tabSuggestions');
     const tabIncidents = document.getElementById('tabIncidents');
+    const tabStats = document.getElementById('tabStats');
     const packsSection = document.getElementById('packsSection');
     const suggestionsSection = document.getElementById('suggestionsSection');
     const incidentsSection = document.getElementById('incidentsSection');
+    const statsSection = document.getElementById('statsSection');
     const packsManagement = document.getElementById('packsManagement');
     const suggestionsManagement = document.getElementById('suggestionsManagement');
     const incidentsManagement = document.getElementById('incidentsManagement');
+    const statsManagement = document.getElementById('statsManagement');
     
     // Incidents elements
     const btnRefreshIncidents = document.getElementById('btnRefreshIncidents');
@@ -419,6 +582,20 @@
     const incidentStatsPending = document.getElementById('incidentStatsPending');
     const incidentStatsInReview = document.getElementById('incidentStatsInReview');
     const incidentStatsResolved = document.getElementById('incidentStatsResolved');
+    
+    // Statistics elements
+    const dashboardTimeFilter = document.getElementById('dashboardTimeFilter');
+    const btnRefreshDashboard = document.getElementById('btnRefreshDashboard');
+    const dashTotalUsers = document.getElementById('dashTotalUsers');
+    const dashActiveUsers = document.getElementById('dashActiveUsers');
+    const dashTotalGames = document.getElementById('dashTotalGames');
+    const dashTotalDemos = document.getElementById('dashTotalDemos');
+    const dashRegisteredUsers = document.getElementById('dashRegisteredUsers');
+    const dashAnonymousUsers = document.getElementById('dashAnonymousUsers');
+    const dashGamesPerDay = document.getElementById('dashGamesPerDay');
+    const dashDemosPerDay = document.getElementById('dashDemosPerDay');
+    const dashMostPlayedTable = document.getElementById('dashMostPlayedTable');
+    const recentEvents = document.getElementById('recentEvents');
     
     let selectedIncidentId = null;
     const suggestionsList = document.getElementById('suggestionsList');
@@ -482,6 +659,8 @@
       tabPacks.addEventListener('click', () => switchToTab('packs'));
     tabSuggestions.addEventListener('click', () => switchToTab('suggestions'));
     tabIncidents.addEventListener('click', () => switchToTab('incidents'));
+    tabStats.addEventListener('click', () => switchToTab('stats'));
+    btnRefreshDashboard.addEventListener('click', loadDashboardData);
       btnRefreshSuggestions.addEventListener('click', fetchSuggestions);
         suggestionStatusFilter.addEventListener('change', fetchSuggestions);
         btnRefreshIncidents.addEventListener('click', fetchIncidents);
@@ -502,14 +681,17 @@
       tabPacks.className = 'flex-1 rounded-md py-2 px-3 text-sm font-medium text-gray-500 hover:text-gray-700';
       tabSuggestions.className = 'flex-1 rounded-md py-2 px-3 text-sm font-medium text-gray-500 hover:text-gray-700';
       tabIncidents.className = 'flex-1 rounded-md py-2 px-3 text-sm font-medium text-gray-500 hover:text-gray-700';
+      tabStats.className = 'flex-1 rounded-md py-2 px-3 text-sm font-medium text-gray-500 hover:text-gray-700';
       
       // Hide all sections
       packsSection.classList.add('hidden');
       suggestionsSection.classList.add('hidden');
       incidentsSection.classList.add('hidden');
+      statsSection.classList.add('hidden');
       packsManagement.classList.add('hidden');
       suggestionsManagement.classList.add('hidden');
       incidentsManagement.classList.add('hidden');
+      statsManagement.classList.add('hidden');
       
       if (tab === 'packs') {
         tabPacks.className = 'flex-1 rounded-md py-2 px-3 text-sm font-medium bg-white shadow-sm';
@@ -527,6 +709,11 @@
         incidentsManagement.classList.remove('hidden');
         fetchIncidents();
         loadIncidentStats();
+      } else if (tab === 'stats') {
+        tabStats.className = 'flex-1 rounded-md py-2 px-3 text-sm font-medium bg-white shadow-sm';
+        statsSection.classList.remove('hidden');
+        statsManagement.classList.remove('hidden');
+        loadDashboardData();
       }
     }
 
@@ -1067,6 +1254,214 @@
         case 'resolved': return 'Resuelto';
         default: return 'Desconocido';
       }
+    }
+    
+    // ------------------- STATISTICS MANAGEMENT -------------------
+    async function loadDashboardData() {
+      try {
+        const timeFilter = dashboardTimeFilter.value;
+        const timeRange = getTimeRange(timeFilter);
+        
+        // Load analytics data
+        const analyticsQuery = query(
+          collection(db, 'analytics'),
+          where('timestamp', '>=', timeRange.start),
+          where('timestamp', '<=', timeRange.end)
+        );
+        
+        const analyticsSnap = await getDocs(analyticsQuery);
+        const events = [];
+        analyticsSnap.forEach(doc => {
+          events.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Calculate statistics
+        const stats = calculateStatistics(events, timeFilter);
+        
+        // Update UI
+        updateDashboardUI(stats);
+        updateMostPlayedPacks(events);
+        updateRecentEvents(events.slice(-10));
+        
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        showDashboardError();
+      }
+    }
+    
+    function getTimeRange(filter) {
+      const now = new Date();
+      let start;
+      
+      switch (filter) {
+        case 'realtime':
+          start = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes ago
+          break;
+        case 'day':
+          start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          break;
+        case 'month':
+          start = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        case 'year':
+          start = new Date(now.getFullYear(), 0, 1);
+          break;
+        default:
+          start = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 1 day ago
+      }
+      
+      return { start, end: now };
+    }
+    
+    function calculateStatistics(events, timeFilter) {
+      const uniqueUsers = new Set();
+      const registeredUsers = new Set();
+      const anonymousUsers = new Set();
+      let totalGames = 0;
+      let totalDemos = 0;
+      
+      events.forEach(event => {
+        if (event.userId) {
+          uniqueUsers.add(event.userId);
+          if (event.userType === 'registered') {
+            registeredUsers.add(event.userId);
+          } else {
+            anonymousUsers.add(event.userId);
+          }
+        }
+        
+        if (event.eventType === 'game_start') {
+          totalGames++;
+        } else if (event.eventType === 'demo_used') {
+          totalDemos++;
+        }
+      });
+      
+      // Calculate per-day averages for longer periods
+      const timeRange = getTimeRange(timeFilter);
+      const daysDiff = Math.max(1, Math.ceil((timeRange.end - timeRange.start) / (1000 * 60 * 60 * 24)));
+      
+      return {
+        totalUsers: uniqueUsers.size,
+        activeUsers: uniqueUsers.size, // For the selected period
+        registeredUsers: registeredUsers.size,
+        anonymousUsers: anonymousUsers.size,
+        totalGames,
+        totalDemos,
+        gamesPerDay: Math.round(totalGames / daysDiff * 10) / 10,
+        demosPerDay: Math.round(totalDemos / daysDiff * 10) / 10
+      };
+    }
+    
+    function updateDashboardUI(stats) {
+      dashTotalUsers.textContent = stats.totalUsers;
+      dashActiveUsers.textContent = stats.activeUsers;
+      dashTotalGames.textContent = stats.totalGames;
+      dashTotalDemos.textContent = stats.totalDemos;
+      dashRegisteredUsers.textContent = stats.registeredUsers;
+      dashAnonymousUsers.textContent = stats.anonymousUsers;
+      dashGamesPerDay.textContent = stats.gamesPerDay;
+      dashDemosPerDay.textContent = stats.demosPerDay;
+    }
+    
+    function updateMostPlayedPacks(events) {
+      const packCounts = {};
+      
+      events.forEach(event => {
+        if (event.eventType === 'pack_selected' && event.packName) {
+          packCounts[event.packName] = (packCounts[event.packName] || 0) + 1;
+        }
+      });
+      
+      const sortedPacks = Object.entries(packCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 10);
+      
+      dashMostPlayedTable.innerHTML = '';
+      
+      if (sortedPacks.length === 0) {
+        dashMostPlayedTable.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-500">No hay datos disponibles</td></tr>';
+        return;
+      }
+      
+      sortedPacks.forEach(([packName, count]) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="py-2">${packName}</td>
+          <td class="text-right py-2 font-semibold">${count}</td>
+        `;
+        dashMostPlayedTable.appendChild(row);
+      });
+    }
+    
+    function updateRecentEvents(events) {
+      recentEvents.innerHTML = '';
+      
+      if (events.length === 0) {
+        recentEvents.innerHTML = '<div class="text-center py-4 text-gray-500">No hay eventos recientes</div>';
+        return;
+      }
+      
+      events.reverse().forEach(event => {
+        const eventDiv = document.createElement('div');
+        eventDiv.className = 'flex justify-between items-center py-2 px-3 bg-gray-50 rounded text-sm';
+        
+        const eventText = getEventDescription(event);
+        const timeText = formatEventTime(event.timestamp);
+        
+        eventDiv.innerHTML = `
+          <span>${eventText}</span>
+          <span class="text-gray-500 text-xs">${timeText}</span>
+        `;
+        
+        recentEvents.appendChild(eventDiv);
+      });
+    }
+    
+    function getEventDescription(event) {
+      switch (event.eventType) {
+        case 'game_start':
+          return `🎮 Juego iniciado (${event.gameType || 'mixto'})`;
+        case 'game_end':
+          return `🏁 Juego terminado (${event.totalRounds || 0} rondas)`;
+        case 'pack_selected':
+          return `📦 Pack seleccionado: ${event.packName || 'Desconocido'}`;
+        case 'demo_used':
+          return `🎯 Demo usado: ${event.packName || 'Desconocido'}`;
+        default:
+          return `📊 ${event.eventType || 'Evento desconocido'}`;
+      }
+    }
+    
+    function formatEventTime(timestamp) {
+      if (!timestamp) return 'Hace un momento';
+      
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / (1000 * 60));
+      
+      if (diffMins < 1) return 'Ahora';
+      if (diffMins < 60) return `Hace ${diffMins}m`;
+      
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `Hace ${diffHours}h`;
+      
+      const diffDays = Math.floor(diffHours / 24);
+      return `Hace ${diffDays}d`;
+    }
+    
+    function showDashboardError() {
+      dashTotalUsers.textContent = 'Error';
+      dashActiveUsers.textContent = 'Error';
+      dashTotalGames.textContent = 'Error';
+      dashTotalDemos.textContent = 'Error';
+      dashRegisteredUsers.textContent = 'Error';
+      dashAnonymousUsers.textContent = 'Error';
+      dashGamesPerDay.textContent = 'Error';
+      dashDemosPerDay.textContent = 'Error';
+      dashMostPlayedTable.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-red-500">Error al cargar datos</td></tr>';
+      recentEvents.innerHTML = '<div class="text-center py-4 text-red-500">Error al cargar eventos</div>';
     }
 
     function escapeHtml(text){ if(!text) return ''; return String(text).replace(/[&<>\"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
