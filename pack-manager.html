@@ -33,6 +33,7 @@
         <div class="mb-4 flex rounded-lg bg-gray-100 p-1">
           <button id="tabPacks" class="flex-1 rounded-md py-2 px-3 text-sm font-medium bg-white shadow-sm">Packs</button>
           <button id="tabSuggestions" class="flex-1 rounded-md py-2 px-3 text-sm font-medium text-gray-500 hover:text-gray-700">Sugerencias</button>
+          <button id="tabIncidents" class="flex-1 rounded-md py-2 px-3 text-sm font-medium text-gray-500 hover:text-gray-700">Incidencias</button>
         </div>
         
         <!-- Packs Section -->
@@ -62,6 +63,26 @@
             </select>
           </div>
           <div id="suggestionsList" class="space-y-2 max-h-[60vh] overflow-auto scrollbar-thin"></div>
+        </div>
+        
+        <!-- Incidents Section -->
+        <div id="incidentsSection" class="p-4 rounded-2xl shadow-md glass hidden">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-semibold">Incidencias</h2>
+            <button id="btnRefreshIncidents" class="px-3 py-1 text-sm rounded bg-sky-600 text-white hover:bg-sky-700">Refrescar</button>
+          </div>
+          <div class="mb-3">
+            <select id="incidentStatusFilter" class="w-full px-3 py-2 text-sm border rounded-md">
+              <option value="all">Todas las incidencias</option>
+              <option value="pending">Pendientes</option>
+              <option value="in_review">En revisión</option>
+              <option value="resolved">Resueltas</option>
+            </select>
+          </div>
+          <div id="incidentsList" class="space-y-2 max-h-[60vh] overflow-auto scrollbar-thin"></div>
+          <div class="mt-3 text-xs text-gray-600">
+            <div id="incidentStats">Cargando estadísticas...</div>
+          </div>
         </div>
       </aside>
 
@@ -236,6 +257,66 @@
             </div>
           </div>
         </div>
+        
+        <!-- Incidents Management Section -->
+        <div id="incidentsManagement" class="p-6 rounded-2xl shadow-md glass hidden">
+          <h2 class="text-xl font-bold mb-4">Gestión de Incidencias</h2>
+          
+          <!-- Incident Details -->
+          <div class="bg-white p-4 rounded-lg mb-6 hidden" id="incidentDetails">
+            <h3 class="font-semibold mb-3">Detalles de la Incidencia</h3>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Usuario</label>
+                <span id="incidentUserEmail" class="text-sm text-gray-900"></span>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                <span id="incidentDate" class="text-sm text-gray-900"></span>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700">Estado</label>
+              <select id="incidentStatus" class="mt-1 block w-full rounded-md border px-3 py-2">
+                <option value="pending">Pendiente</option>
+                <option value="in_review">En revisión</option>
+                <option value="resolved">Resuelta</option>
+              </select>
+            </div>
+            
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700">Descripción</label>
+              <div id="incidentDescription" class="mt-1 p-3 bg-gray-50 rounded border text-sm min-h-[100px]"></div>
+            </div>
+            
+            <div class="flex gap-3">
+              <button id="btnUpdateIncident" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Actualizar Estado</button>
+              <button id="btnDeleteIncident" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Eliminar</button>
+            </div>
+          </div>
+          
+          <!-- Statistics -->
+          <div class="grid grid-cols-4 gap-4 mb-6">
+            <div class="bg-blue-50 p-4 rounded-lg text-center">
+              <div class="text-2xl font-bold text-blue-600" id="totalIncidents">0</div>
+              <div class="text-sm text-blue-600">Total</div>
+            </div>
+            <div class="bg-yellow-50 p-4 rounded-lg text-center">
+              <div class="text-2xl font-bold text-yellow-600" id="pendingIncidents">0</div>
+              <div class="text-sm text-yellow-600">Pendientes</div>
+            </div>
+            <div class="bg-orange-50 p-4 rounded-lg text-center">
+              <div class="text-2xl font-bold text-orange-600" id="inReviewIncidents">0</div>
+              <div class="text-sm text-orange-600">En revisión</div>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg text-center">
+              <div class="text-2xl font-bold text-green-600" id="resolvedIncidents">0</div>
+              <div class="text-sm text-green-600">Resueltas</div>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
 
@@ -313,10 +394,33 @@
     // Suggestions elements
     const tabPacks = document.getElementById('tabPacks');
     const tabSuggestions = document.getElementById('tabSuggestions');
+    const tabIncidents = document.getElementById('tabIncidents');
     const packsSection = document.getElementById('packsSection');
     const suggestionsSection = document.getElementById('suggestionsSection');
+    const incidentsSection = document.getElementById('incidentsSection');
     const packsManagement = document.getElementById('packsManagement');
     const suggestionsManagement = document.getElementById('suggestionsManagement');
+    const incidentsManagement = document.getElementById('incidentsManagement');
+    
+    // Incidents elements
+    const btnRefreshIncidents = document.getElementById('btnRefreshIncidents');
+    const incidentStatusFilter = document.getElementById('incidentStatusFilter');
+    const incidentsList = document.getElementById('incidentsList');
+    const incidentIdDisplay = document.getElementById('incidentIdDisplay');
+    const incidentUserDisplay = document.getElementById('incidentUserDisplay');
+    const incidentDateDisplay = document.getElementById('incidentDateDisplay');
+    const incidentStatusDisplay = document.getElementById('incidentStatusDisplay');
+    const incidentDescriptionDisplay = document.getElementById('incidentDescriptionDisplay');
+    const btnMarkPending = document.getElementById('btnMarkPending');
+    const btnMarkInReview = document.getElementById('btnMarkInReview');
+    const btnMarkResolved = document.getElementById('btnMarkResolved');
+    const btnDeleteIncident = document.getElementById('btnDeleteIncident');
+    const incidentStatsTotal = document.getElementById('incidentStatsTotal');
+    const incidentStatsPending = document.getElementById('incidentStatsPending');
+    const incidentStatsInReview = document.getElementById('incidentStatsInReview');
+    const incidentStatsResolved = document.getElementById('incidentStatsResolved');
+    
+    let selectedIncidentId = null;
     const suggestionsList = document.getElementById('suggestionsList');
     const suggestionStatusFilter = document.getElementById('suggestionStatusFilter');
     const btnRefreshSuggestions = document.getElementById('btnRefreshSuggestions');
@@ -376,9 +480,16 @@
     // ------------------- TAB NAVIGATION -------------------
     function setupTabNavigation() {
       tabPacks.addEventListener('click', () => switchToTab('packs'));
-      tabSuggestions.addEventListener('click', () => switchToTab('suggestions'));
+    tabSuggestions.addEventListener('click', () => switchToTab('suggestions'));
+    tabIncidents.addEventListener('click', () => switchToTab('incidents'));
       btnRefreshSuggestions.addEventListener('click', fetchSuggestions);
-      suggestionStatusFilter.addEventListener('change', fetchSuggestions);
+        suggestionStatusFilter.addEventListener('change', fetchSuggestions);
+        btnRefreshIncidents.addEventListener('click', fetchIncidents);
+        incidentStatusFilter.addEventListener('change', fetchIncidents);
+        btnMarkPending.addEventListener('click', () => updateIncidentStatus('pending'));
+        btnMarkInReview.addEventListener('click', () => updateIncidentStatus('in_review'));
+        btnMarkResolved.addEventListener('click', () => updateIncidentStatus('resolved'));
+        btnDeleteIncident.addEventListener('click', deleteIncident);
       btnUpdateSuggestion.addEventListener('click', updateSuggestionStatus);
       btnDeleteSuggestion.addEventListener('click', deleteSuggestion);
       btnConfigureSuggestionPack.addEventListener('click', configureSuggestionPack);
@@ -386,22 +497,36 @@
 
     function switchToTab(tab) {
       currentView = tab;
+      
+      // Reset all tabs
+      tabPacks.className = 'flex-1 rounded-md py-2 px-3 text-sm font-medium text-gray-500 hover:text-gray-700';
+      tabSuggestions.className = 'flex-1 rounded-md py-2 px-3 text-sm font-medium text-gray-500 hover:text-gray-700';
+      tabIncidents.className = 'flex-1 rounded-md py-2 px-3 text-sm font-medium text-gray-500 hover:text-gray-700';
+      
+      // Hide all sections
+      packsSection.classList.add('hidden');
+      suggestionsSection.classList.add('hidden');
+      incidentsSection.classList.add('hidden');
+      packsManagement.classList.add('hidden');
+      suggestionsManagement.classList.add('hidden');
+      incidentsManagement.classList.add('hidden');
+      
       if (tab === 'packs') {
         tabPacks.className = 'flex-1 rounded-md py-2 px-3 text-sm font-medium bg-white shadow-sm';
-        tabSuggestions.className = 'flex-1 rounded-md py-2 px-3 text-sm font-medium text-gray-500 hover:text-gray-700';
         packsSection.classList.remove('hidden');
-        suggestionsSection.classList.add('hidden');
         packsManagement.classList.remove('hidden');
-        suggestionsManagement.classList.add('hidden');
-      } else {
+      } else if (tab === 'suggestions') {
         tabSuggestions.className = 'flex-1 rounded-md py-2 px-3 text-sm font-medium bg-white shadow-sm';
-        tabPacks.className = 'flex-1 rounded-md py-2 px-3 text-sm font-medium text-gray-500 hover:text-gray-700';
-        packsSection.classList.add('hidden');
         suggestionsSection.classList.remove('hidden');
-        packsManagement.classList.add('hidden');
         suggestionsManagement.classList.remove('hidden');
         fetchSuggestions();
         loadPacksForSuggestions();
+      } else if (tab === 'incidents') {
+        tabIncidents.className = 'flex-1 rounded-md py-2 px-3 text-sm font-medium bg-white shadow-sm';
+        incidentsSection.classList.remove('hidden');
+        incidentsManagement.classList.remove('hidden');
+        fetchIncidents();
+        loadIncidentStats();
       }
     }
 
@@ -786,6 +911,163 @@
     
     // Agregar event listener para el checkbox
     referralUnlockableCheckbox.addEventListener('change', toggleRequiredReferralsVisibility);
+
+    // ------------------- INCIDENTS MANAGEMENT -------------------
+    async function fetchIncidents() {
+      incidentsList.innerHTML = 'Cargando...';
+      const filter = incidentStatusFilter.value;
+      
+      let q = collection(db, 'incidents');
+      if (filter !== 'all') {
+        q = query(q, where('status', '==', filter));
+      }
+      
+      const snap = await getDocs(q);
+      incidentsList.innerHTML = '';
+      
+      const incidents = [];
+      snap.forEach(d => {
+        incidents.push({ id: d.id, ...d.data() });
+      });
+      
+      // Sort by creation date (newest first)
+      incidents.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+      
+      incidents.forEach(incident => {
+        const node = document.createElement('div');
+        node.className = 'p-3 rounded-lg hover:bg-slate-50 flex justify-between items-start cursor-pointer border-l-4 ' + getIncidentStatusColor(incident.status);
+        
+        const date = incident.createdAt ? new Date(incident.createdAt.toMillis()).toLocaleDateString() : 'N/A';
+        
+        node.innerHTML = `
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span>🚨</span>
+              <span class="font-medium text-sm">INCIDENCIA</span>
+              <span class="text-xs text-gray-500">${date}</span>
+            </div>
+            <div class="text-sm text-gray-700 mb-1">${escapeHtml(incident.description.substring(0, 100))}${incident.description.length > 100 ? '...' : ''}</div>
+            <div class="text-xs text-gray-500">Por: ${escapeHtml(incident.userEmail || 'Anónimo')}</div>
+          </div>
+          <div class="text-xs px-2 py-1 rounded ${getIncidentStatusBadge(incident.status)}">
+            ${getIncidentStatusText(incident.status)}
+          </div>
+        `;
+        
+        node.addEventListener('click', () => selectIncident(incident.id, incident));
+        incidentsList.appendChild(node);
+      });
+      
+      if (incidents.length === 0) {
+        incidentsList.innerHTML = '<div class="text-center text-gray-500 py-4">No hay incidencias</div>';
+      }
+    }
+    
+    function selectIncident(id, incident) {
+      selectedIncidentId = id;
+      incidentIdDisplay.textContent = id;
+      incidentUserDisplay.textContent = incident.userEmail || 'Anónimo';
+      incidentDateDisplay.textContent = incident.createdAt ? new Date(incident.createdAt.toMillis()).toLocaleDateString() : 'N/A';
+      incidentStatusDisplay.textContent = getIncidentStatusText(incident.status);
+      incidentDescriptionDisplay.textContent = incident.description;
+    }
+    
+    async function updateIncidentStatus(status) {
+      if (!selectedIncidentId) {
+        alert('Selecciona una incidencia');
+        return;
+      }
+      
+      try {
+        await updateDoc(doc(db, 'incidents', selectedIncidentId), {
+          status: status,
+          updatedAt: new Date()
+        });
+        
+        alert(`Incidencia marcada como ${getIncidentStatusText(status)}`);
+        fetchIncidents();
+        loadIncidentStats();
+      } catch (error) {
+        console.error('Error updating incident:', error);
+        alert('Error al actualizar la incidencia');
+      }
+    }
+    
+    async function deleteIncident() {
+      if (!selectedIncidentId) {
+        alert('Selecciona una incidencia');
+        return;
+      }
+      
+      if (!confirm('¿Estás seguro de que quieres eliminar esta incidencia?')) {
+        return;
+      }
+      
+      try {
+        await deleteDoc(doc(db, 'incidents', selectedIncidentId));
+        alert('Incidencia eliminada');
+        selectedIncidentId = null;
+        incidentIdDisplay.textContent = '(ninguna)';
+        incidentUserDisplay.textContent = '-';
+        incidentDateDisplay.textContent = '-';
+        incidentStatusDisplay.textContent = '-';
+        incidentDescriptionDisplay.textContent = '-';
+        fetchIncidents();
+        loadIncidentStats();
+      } catch (error) {
+        console.error('Error deleting incident:', error);
+        alert('Error al eliminar la incidencia');
+      }
+    }
+    
+    async function loadIncidentStats() {
+      try {
+        const snap = await getDocs(collection(db, 'incidents'));
+        let total = 0, pending = 0, inReview = 0, resolved = 0;
+        
+        snap.forEach(d => {
+          const incident = d.data();
+          total++;
+          if (incident.status === 'pending') pending++;
+          else if (incident.status === 'in_review') inReview++;
+          else if (incident.status === 'resolved') resolved++;
+        });
+        
+        incidentStatsTotal.textContent = total;
+        incidentStatsPending.textContent = pending;
+        incidentStatsInReview.textContent = inReview;
+        incidentStatsResolved.textContent = resolved;
+      } catch (error) {
+        console.error('Error loading incident stats:', error);
+      }
+    }
+    
+    function getIncidentStatusColor(status) {
+      switch (status) {
+        case 'pending': return 'border-red-400';
+        case 'in_review': return 'border-yellow-400';
+        case 'resolved': return 'border-green-400';
+        default: return 'border-gray-400';
+      }
+    }
+    
+    function getIncidentStatusBadge(status) {
+      switch (status) {
+        case 'pending': return 'bg-red-100 text-red-800';
+        case 'in_review': return 'bg-yellow-100 text-yellow-800';
+        case 'resolved': return 'bg-green-100 text-green-800';
+        default: return 'bg-gray-100 text-gray-800';
+      }
+    }
+    
+    function getIncidentStatusText(status) {
+      switch (status) {
+        case 'pending': return 'Pendiente';
+        case 'in_review': return 'En Revisión';
+        case 'resolved': return 'Resuelto';
+        default: return 'Desconocido';
+      }
+    }
 
     function escapeHtml(text){ if(!text) return ''; return String(text).replace(/[&<>\"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
   </script>
