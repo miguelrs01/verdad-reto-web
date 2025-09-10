@@ -351,10 +351,11 @@
             
             <div class="mb-4">
               <label class="block text-sm font-medium text-gray-700 mb-2">Cambiar Estado</label>
-              <div class="flex gap-2">
+              <div class="flex gap-2 flex-wrap">
                 <button id="btnMarkPending" class="px-3 py-1 text-sm rounded bg-red-100 text-red-800 hover:bg-red-200">Pendiente</button>
                 <button id="btnMarkInReview" class="px-3 py-1 text-sm rounded bg-yellow-100 text-yellow-800 hover:bg-yellow-200">En Revisión</button>
                 <button id="btnMarkResolved" class="px-3 py-1 text-sm rounded bg-green-100 text-green-800 hover:bg-green-200">Resuelta</button>
+                <button id="btnMarkRejected" class="px-3 py-1 text-sm rounded bg-gray-100 text-gray-800 hover:bg-gray-200">Rechazada</button>
               </div>
             </div>
             
@@ -364,22 +365,26 @@
           </div>
           
           <!-- Statistics -->
-          <div class="grid grid-cols-4 gap-4 mb-6">
+          <div class="grid grid-cols-5 gap-4 mb-6">
             <div class="bg-blue-50 p-4 rounded-lg text-center">
-              <div class="text-2xl font-bold text-blue-600" id="totalIncidents">0</div>
+              <div class="text-2xl font-bold text-blue-600" id="incidentStatsTotal">0</div>
               <div class="text-sm text-blue-600">Total</div>
             </div>
             <div class="bg-yellow-50 p-4 rounded-lg text-center">
-              <div class="text-2xl font-bold text-yellow-600" id="pendingIncidents">0</div>
+              <div class="text-2xl font-bold text-yellow-600" id="incidentStatsPending">0</div>
               <div class="text-sm text-yellow-600">Pendientes</div>
             </div>
             <div class="bg-orange-50 p-4 rounded-lg text-center">
-              <div class="text-2xl font-bold text-orange-600" id="inReviewIncidents">0</div>
+              <div class="text-2xl font-bold text-orange-600" id="incidentStatsInReview">0</div>
               <div class="text-sm text-orange-600">En revisión</div>
             </div>
             <div class="bg-green-50 p-4 rounded-lg text-center">
-              <div class="text-2xl font-bold text-green-600" id="resolvedIncidents">0</div>
+              <div class="text-2xl font-bold text-green-600" id="incidentStatsResolved">0</div>
               <div class="text-sm text-green-600">Resueltas</div>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg text-center">
+              <div class="text-2xl font-bold text-gray-600" id="incidentStatsRejected">0</div>
+              <div class="text-sm text-gray-600">Rechazadas</div>
             </div>
           </div>
         </div>
@@ -588,6 +593,7 @@
     const incidentStatsPending = document.getElementById('incidentStatsPending');
     const incidentStatsInReview = document.getElementById('incidentStatsInReview');
     const incidentStatsResolved = document.getElementById('incidentStatsResolved');
+    const incidentStatsRejected = document.getElementById('incidentStatsRejected');
     
     // Statistics elements
     const dashboardTimeFilter = document.getElementById('dashboardTimeFilter');
@@ -674,6 +680,7 @@
         btnMarkPending.addEventListener('click', () => updateIncidentStatus('pending'));
         btnMarkInReview.addEventListener('click', () => updateIncidentStatus('in_review'));
         btnMarkResolved.addEventListener('click', () => updateIncidentStatus('resolved'));
+        btnMarkRejected.addEventListener('click', () => updateIncidentStatus('rejected'));
         btnDeleteIncident.addEventListener('click', deleteIncident);
       btnUpdateSuggestion.addEventListener('click', updateSuggestionStatus);
       btnDeleteSuggestion.addEventListener('click', deleteSuggestion);
@@ -1091,14 +1098,18 @@
 
     // Lógica para mostrar/ocultar campo de referidos requeridos
     const referralUnlockableCheckbox = document.getElementById('isReferralUnlockable');
-    const requiredReferralsContainer = document.querySelector('label[for="requiredReferrals"]').parentElement;
+    const requiredReferralsLabel = document.querySelector('label[for="requiredReferrals"]');
+    const requiredReferralsContainer = requiredReferralsLabel ? requiredReferralsLabel.parentElement : null;
     
     function toggleRequiredReferralsVisibility() {
-      if (referralUnlockableCheckbox.checked) {
-        requiredReferralsContainer.style.display = 'block';
-      } else {
-        requiredReferralsContainer.style.display = 'none';
-        document.getElementById('requiredReferrals').value = 0;
+      if (requiredReferralsContainer) {
+        if (referralUnlockableCheckbox.checked) {
+          requiredReferralsContainer.style.display = 'block';
+        } else {
+          requiredReferralsContainer.style.display = 'none';
+          const requiredReferralsInput = document.getElementById('requiredReferrals');
+          if (requiredReferralsInput) requiredReferralsInput.value = 0;
+        }
       }
     }
     
@@ -1127,13 +1138,13 @@
       });
       
       // Sort by creation date (newest first)
-      incidents.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+      incidents.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
       
       incidents.forEach(incident => {
         const node = document.createElement('div');
         node.className = 'p-3 rounded-lg hover:bg-slate-50 flex justify-between items-start cursor-pointer border-l-4 ' + getIncidentStatusColor(incident.status);
         
-        const date = incident.createdAt ? new Date(incident.createdAt.toMillis()).toLocaleDateString() : 'N/A';
+        const date = incident.timestamp ? new Date(incident.timestamp.toMillis()).toLocaleDateString() : 'N/A';
         
         node.innerHTML = `
           <div class="flex-1">
@@ -1163,7 +1174,7 @@
       selectedIncidentId = id;
       incidentIdDisplay.textContent = id;
       incidentUserDisplay.textContent = incident.userEmail || 'Anónimo';
-      incidentDateDisplay.textContent = incident.createdAt ? new Date(incident.createdAt.toMillis()).toLocaleDateString() : 'N/A';
+      incidentDateDisplay.textContent = incident.timestamp ? new Date(incident.timestamp.toMillis()).toLocaleDateString() : 'N/A';
       incidentStatusDisplay.textContent = getIncidentStatusText(incident.status);
       incidentDescriptionDisplay.textContent = incident.description;
       
@@ -1222,7 +1233,7 @@
     async function loadIncidentStats() {
       try {
         const snap = await getDocs(collection(db, 'incidents'));
-        let total = 0, pending = 0, inReview = 0, resolved = 0;
+        let total = 0, pending = 0, inReview = 0, resolved = 0, rejected = 0;
         
         snap.forEach(d => {
           const incident = d.data();
@@ -1230,12 +1241,14 @@
           if (incident.status === 'pending') pending++;
           else if (incident.status === 'in_review') inReview++;
           else if (incident.status === 'resolved') resolved++;
+          else if (incident.status === 'rejected') rejected++;
         });
         
         incidentStatsTotal.textContent = total;
         incidentStatsPending.textContent = pending;
         incidentStatsInReview.textContent = inReview;
         incidentStatsResolved.textContent = resolved;
+        incidentStatsRejected.textContent = rejected;
       } catch (error) {
         console.error('Error loading incident stats:', error);
       }
@@ -1246,6 +1259,7 @@
         case 'pending': return 'border-red-400';
         case 'in_review': return 'border-yellow-400';
         case 'resolved': return 'border-green-400';
+        case 'rejected': return 'border-gray-400';
         default: return 'border-gray-400';
       }
     }
@@ -1255,6 +1269,7 @@
         case 'pending': return 'bg-red-100 text-red-800';
         case 'in_review': return 'bg-yellow-100 text-yellow-800';
         case 'resolved': return 'bg-green-100 text-green-800';
+        case 'rejected': return 'bg-gray-100 text-gray-800';
         default: return 'bg-gray-100 text-gray-800';
       }
     }
@@ -1264,6 +1279,7 @@
         case 'pending': return 'Pendiente';
         case 'in_review': return 'En Revisión';
         case 'resolved': return 'Resuelto';
+        case 'rejected': return 'Rechazada';
         default: return 'Desconocido';
       }
     }
