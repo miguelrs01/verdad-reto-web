@@ -782,14 +782,43 @@
             <!-- Custom Messages Module -->
             <div class="border-b pb-4 mb-4">
               <h4 class="font-medium mb-3 text-green-700">Mensajes Personalizados</h4>
-              <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-4">
                 <div class="flex items-center gap-2">
                   <input id="messagesModuleEnabled" type="checkbox" class="h-4 w-4" />
-                  <span class="text-sm">Habilitado</span>
+                  <span class="text-sm font-medium">Habilitado</span>
                 </div>
+                
+                <!-- Tipo de Mensaje -->
                 <div>
-                  <label class="block text-xs font-medium text-gray-600">Mensaje de progreso</label>
-                  <input id="progressMessage" type="text" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="Te faltan {remaining} referidos para desbloquear {pack}" />
+                  <label class="block text-xs font-medium text-gray-600 mb-2">Tipo de Mensaje</label>
+                  <select id="messageType" class="block w-full rounded border px-2 py-1 text-sm">
+                    <option value="plain">Mensaje en texto plano</option>
+                    <option value="referral">Mensaje de referidos para desbloquear pack</option>
+                    <option value="shop">Mensaje de tienda/descuentos</option>
+                  </select>
+                </div>
+                
+                <!-- Mensaje Texto Plano -->
+                <div id="plainMessageSection" class="message-section">
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Mensaje de Texto Plano</label>
+                  <textarea id="plainMessage" class="block w-full rounded border px-2 py-1 text-sm" rows="3" placeholder="Escribe tu mensaje personalizado aquí..."></textarea>
+                </div>
+                
+                <!-- Mensaje de Referidos -->
+                <div id="referralMessageSection" class="message-section hidden">
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Mensaje de Referidos</label>
+                  <textarea id="referralMessage" class="block w-full rounded border px-2 py-1 text-sm" rows="3" placeholder="Te faltan {remaining} referidos para desbloquear {pack}"></textarea>
+                  <p class="text-xs text-gray-500 mt-1">Usa {remaining} para referidos faltantes y {pack} para nombre del pack</p>
+                </div>
+                
+                <!-- Mensaje de Tienda -->
+                <div id="shopMessageSection" class="message-section hidden">
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Mensaje de Tienda/Descuentos</label>
+                  <textarea id="shopMessage" class="block w-full rounded border px-2 py-1 text-sm" rows="3" placeholder="¡Nuevos packs disponibles en la tienda! Descubre ofertas especiales."></textarea>
+                  <div class="flex items-center gap-2 mt-2">
+                    <input id="shopMessageRedirect" type="checkbox" class="h-4 w-4" />
+                    <span class="text-xs text-gray-600">Permitir redirección a la tienda</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2117,7 +2146,11 @@
         },
         customMessages: {
           enabled: false,
-          progressMessage: 'Te faltan {remaining} referidos para desbloquear {pack}'
+          messageType: 'plain',
+          plainMessage: '¡Bienvenido! Disfruta de nuestra aplicación.',
+          referralMessage: 'Te faltan {remaining} referidos para desbloquear {pack}',
+          shopMessage: '¡Nuevos packs disponibles en la tienda! Descubre ofertas especiales.',
+          shopMessageRedirect: false
         },
         shopButton: {
           enabled: false,
@@ -2132,7 +2165,7 @@
         welcomeStatus.textContent = 'Cargando configuración...';
         welcomeStatus.className = 'text-blue-800';
         
-        const configRef = doc(db, 'welcomeConfig', 'settings');
+        const configRef = doc(db, 'config', 'welcomeScreen');
         const configSnap = await getDoc(configRef);
         
         if (configSnap.exists()) {
@@ -2159,7 +2192,14 @@
       referralButtonText.value = currentWelcomeConfigData.modules.referralProgress.buttonText;
       
       messagesModuleEnabled.checked = currentWelcomeConfigData.modules.customMessages.enabled;
-      progressMessage.value = currentWelcomeConfigData.modules.customMessages.progressMessage;
+      document.getElementById('messageType').value = currentWelcomeConfigData.modules.customMessages.messageType || 'plain';
+      document.getElementById('plainMessage').value = currentWelcomeConfigData.modules.customMessages.plainMessage || '';
+      document.getElementById('referralMessage').value = currentWelcomeConfigData.modules.customMessages.referralMessage || '';
+      document.getElementById('shopMessage').value = currentWelcomeConfigData.modules.customMessages.shopMessage || '';
+      document.getElementById('shopMessageRedirect').checked = currentWelcomeConfigData.modules.customMessages.shopMessageRedirect || false;
+      
+      // Mostrar la sección correcta según el tipo de mensaje
+      toggleMessageSections(currentWelcomeConfigData.modules.customMessages.messageType || 'plain');
       
       shopModuleEnabled.checked = currentWelcomeConfigData.modules.shopButton.enabled;
       shopButtonText.value = currentWelcomeConfigData.modules.shopButton.buttonText;
@@ -2185,7 +2225,11 @@
             },
             customMessages: {
               enabled: messagesModuleEnabled.checked,
-              progressMessage: progressMessage.value || 'Te faltan {remaining} referidos para desbloquear {pack}'
+              messageType: document.getElementById('messageType').value || 'plain',
+              plainMessage: document.getElementById('plainMessage').value || '',
+              referralMessage: document.getElementById('referralMessage').value || 'Te faltan {remaining} referidos para desbloquear {pack}',
+              shopMessage: document.getElementById('shopMessage').value || '¡Nuevos packs disponibles en la tienda!',
+              shopMessageRedirect: document.getElementById('shopMessageRedirect').checked || false
             },
             shopButton: {
               enabled: shopModuleEnabled.checked,
@@ -2196,7 +2240,7 @@
           updatedAt: new Date().toISOString()
         };
         
-        const configRef = doc(db, 'welcomeConfig', 'settings');
+        const configRef = doc(db, 'config', 'welcomeScreen');
         await setDoc(configRef, configData);
         
         currentWelcomeConfigData = configData;
@@ -2224,7 +2268,98 @@
     }
 
     function previewWelcomeScreen() {
-      alert('Vista previa: Esta funcionalidad mostrará cómo se ve la ventana inicial con la configuración actual.');
+      // Crear modal de vista previa
+      const previewModal = document.createElement('div');
+      previewModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+      previewModal.innerHTML = `
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">Vista Previa - Ventana Inicial</h3>
+            <button id="closePreview" class="text-gray-500 hover:text-gray-700">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Contenido de la ventana inicial -->
+          <div class="border-2 border-dashed border-gray-300 p-4 rounded-lg bg-gray-50">
+            ${currentWelcomeConfigData.enabled ? `
+              <div class="text-center">
+                <h2 class="text-xl font-bold mb-3 text-blue-600">¡Bienvenido!</h2>
+                <p class="text-gray-700 mb-4">${currentWelcomeConfigData.message}</p>
+                
+                ${currentWelcomeConfigData.modules.referralProgress.enabled ? `
+                  <div class="bg-blue-50 p-3 rounded-lg mb-3">
+                    <h4 class="font-semibold text-blue-800">Progreso de Referidos</h4>
+                    <p class="text-sm text-blue-600">Meta: ${currentWelcomeConfigData.modules.referralProgress.goal} referidos</p>
+                    <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded text-sm">
+                      ${currentWelcomeConfigData.modules.referralProgress.buttonText}
+                    </button>
+                  </div>
+                ` : ''}
+                
+                ${currentWelcomeConfigData.modules.customMessages.enabled ? `
+                  <div class="bg-yellow-50 p-3 rounded-lg mb-3">
+                    ${(() => {
+                      const messageType = currentWelcomeConfigData.modules.customMessages.messageType || 'plain';
+                      let message = '';
+                      let bgColor = 'bg-yellow-50';
+                      let textColor = 'text-yellow-800';
+                      
+                      switch(messageType) {
+                        case 'plain':
+                          message = currentWelcomeConfigData.modules.customMessages.plainMessage || 'Mensaje personalizado';
+                          break;
+                        case 'referral':
+                          message = currentWelcomeConfigData.modules.customMessages.referralMessage || 'Te faltan {remaining} referidos para desbloquear {pack}';
+                          bgColor = 'bg-blue-50';
+                          textColor = 'text-blue-800';
+                          break;
+                        case 'shop':
+                          message = currentWelcomeConfigData.modules.customMessages.shopMessage || '¡Nuevos packs disponibles en la tienda!';
+                          bgColor = 'bg-purple-50';
+                          textColor = 'text-purple-800';
+                          break;
+                      }
+                      
+                      return `<div class="${bgColor} p-2 rounded"><p class="text-sm ${textColor}">${message}</p></div>`;
+                    })()} 
+                  </div>
+                ` : ''}
+                
+                ${currentWelcomeConfigData.modules.shopButton.enabled ? `
+                  <button class="px-4 py-2 bg-${currentWelcomeConfigData.modules.shopButton.color}-600 text-white rounded text-sm">
+                    ${currentWelcomeConfigData.modules.shopButton.buttonText}
+                  </button>
+                ` : ''}
+              </div>
+            ` : `
+              <div class="text-center text-gray-500">
+                <p>La ventana inicial está deshabilitada</p>
+              </div>
+            `}
+          </div>
+          
+          <div class="mt-4 text-xs text-gray-500">
+            <p><strong>Nota:</strong> Esta es una vista previa aproximada. El diseño real puede variar.</p>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(previewModal);
+      
+      // Cerrar modal
+      document.getElementById('closePreview').addEventListener('click', () => {
+        document.body.removeChild(previewModal);
+      });
+      
+      // Cerrar al hacer clic fuera del modal
+      previewModal.addEventListener('click', (e) => {
+        if (e.target === previewModal) {
+          document.body.removeChild(previewModal);
+        }
+      });
     }
 
     function resetWelcomeConfig() {
@@ -2240,7 +2375,11 @@
           },
           customMessages: {
             enabled: false,
-            progressMessage: 'Te faltan {remaining} referidos para desbloquear {pack}'
+            messageType: 'plain',
+            plainMessage: '¡Bienvenido! Disfruta de nuestra aplicación.',
+            referralMessage: 'Te faltan {remaining} referidos para desbloquear {pack}',
+            shopMessage: '¡Nuevos packs disponibles en la tienda! Descubre ofertas especiales.',
+            shopMessageRedirect: false
           },
           shopButton: {
             enabled: false,
@@ -2255,6 +2394,27 @@
       welcomeStatus.textContent = 'Configuración restablecida a valores por defecto (recuerda guardar)';
       welcomeStatus.className = 'text-yellow-600';
     }
+
+    // Función para alternar entre secciones de mensajes
+    function toggleMessageSections(messageType) {
+      const sections = document.querySelectorAll('.message-section');
+      sections.forEach(section => section.classList.add('hidden'));
+      
+      const targetSection = document.getElementById(messageType + 'MessageSection');
+      if (targetSection) {
+        targetSection.classList.remove('hidden');
+      }
+    }
+
+    // Event listener para el cambio de tipo de mensaje
+    document.addEventListener('DOMContentLoaded', function() {
+      const messageTypeSelect = document.getElementById('messageType');
+      if (messageTypeSelect) {
+        messageTypeSelect.addEventListener('change', function() {
+          toggleMessageSections(this.value);
+        });
+      }
+    });
   </script>
 
 </body>
