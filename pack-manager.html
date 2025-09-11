@@ -35,6 +35,7 @@
           <button id="tabSuggestions" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">Sugerencias</button>
           <button id="tabIncidents" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">Incidencias</button>
           <button id="tabStats" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">Estadísticas</button>
+          <button id="tabAds" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">Anuncios</button>
         </div>
         
         <!-- Packs Section -->
@@ -139,6 +140,29 @@
             <div id="mostPlayedPacks" class="space-y-1 max-h-32 overflow-auto">
               <div class="text-center text-gray-500 py-2">Cargando...</div>
             </div>
+          </div>
+        </div>
+        
+        <!-- Ads Section -->
+        <div id="adsSection" class="p-4 rounded-2xl shadow-md glass hidden">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-semibold">Configuración de Anuncios</h2>
+            <button id="btnRefreshAds" class="px-3 py-1 text-sm rounded bg-sky-600 text-white hover:bg-sky-700">Refrescar</button>
+          </div>
+          
+          <!-- Ad Configuration Status -->
+          <div class="mb-4">
+            <div class="bg-blue-50 p-3 rounded-lg">
+              <div class="text-sm text-blue-600 font-medium">Estado del Sistema</div>
+              <div id="adsSystemStatus" class="text-lg font-bold text-blue-800">Cargando...</div>
+            </div>
+          </div>
+          
+          <!-- Quick Actions -->
+          <div class="space-y-2">
+            <button id="btnEnableAllAds" class="w-full py-2 px-3 text-sm rounded bg-green-600 text-white hover:bg-green-700">Activar Todos los Anuncios</button>
+            <button id="btnDisableAllAds" class="w-full py-2 px-3 text-sm rounded bg-red-600 text-white hover:bg-red-700">Desactivar Todos los Anuncios</button>
+            <button id="btnResetAdsConfig" class="w-full py-2 px-3 text-sm rounded bg-gray-600 text-white hover:bg-gray-700">Restaurar Configuración</button>
           </div>
         </div>
       </aside>
@@ -488,6 +512,187 @@
             </div>
           </div>
         </div>
+        
+        <!-- Ads Management Section -->
+        <div id="adsManagement" class="p-6 rounded-2xl shadow-md glass hidden">
+          <div class="mb-6">
+            <h2 class="text-xl font-bold mb-2">Configuración de Anuncios</h2>
+            <p class="text-gray-600 text-sm">Administra la configuración global de anuncios para la aplicación</p>
+          </div>
+          
+          <!-- Global Ad Settings -->
+          <div class="bg-white p-4 rounded-lg border mb-6">
+            <h3 class="font-semibold mb-4">Configuración Global</h3>
+            
+            <div class="grid grid-cols-2 gap-6">
+              <!-- System Status -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Estado del Sistema</label>
+                <div class="flex items-center gap-3">
+                  <input id="adsGlobalEnabled" type="checkbox" class="h-5 w-5" />
+                  <span class="text-sm">Anuncios habilitados globalmente</span>
+                </div>
+              </div>
+              
+              <!-- Test Mode -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Modo de Prueba</label>
+                <div class="flex items-center gap-3">
+                  <input id="adsTestMode" type="checkbox" class="h-5 w-5" />
+                  <span class="text-sm">Usar anuncios de prueba</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Global Limits -->
+            <div class="grid grid-cols-3 gap-4 mt-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Límite diario por usuario</label>
+                <input id="adsDailyLimit" type="number" class="mt-1 block w-full rounded-md border px-3 py-2" placeholder="10" min="0" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Límite por sesión</label>
+                <input id="adsSessionLimit" type="number" class="mt-1 block w-full rounded-md border px-3 py-2" placeholder="5" min="0" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Intervalo mínimo (min)</label>
+                <input id="adsMinInterval" type="number" class="mt-1 block w-full rounded-md border px-3 py-2" placeholder="2" min="0" step="0.5" />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Ad Types Configuration -->
+          <div class="bg-white p-4 rounded-lg border mb-6">
+            <h3 class="font-semibold mb-4">Configuración por Tipo de Anuncio</h3>
+            
+            <!-- Post Game Ads -->
+            <div class="border-b pb-4 mb-4">
+              <h4 class="font-medium mb-3 text-green-700">Anuncios Post-Partida</h4>
+              <div class="grid grid-cols-4 gap-4">
+                <div class="flex items-center gap-2">
+                  <input id="postGameEnabled" type="checkbox" class="h-4 w-4" />
+                  <span class="text-sm">Habilitado</span>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600">Probabilidad (%)</label>
+                  <input id="postGameProbability" type="number" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="80" min="0" max="100" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600">Límite diario</label>
+                  <input id="postGameDailyLimit" type="number" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="3" min="0" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600">Intervalo (min)</label>
+                  <input id="postGameInterval" type="number" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="5" min="0" step="0.5" />
+                </div>
+              </div>
+            </div>
+            
+            <!-- Post Round Ads -->
+            <div class="border-b pb-4 mb-4">
+              <h4 class="font-medium mb-3 text-blue-700">Anuncios Post-Ronda</h4>
+              <div class="grid grid-cols-4 gap-4">
+                <div class="flex items-center gap-2">
+                  <input id="postRoundEnabled" type="checkbox" class="h-4 w-4" />
+                  <span class="text-sm">Habilitado</span>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600">Probabilidad (%)</label>
+                  <input id="postRoundProbability" type="number" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="30" min="0" max="100" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600">Límite diario</label>
+                  <input id="postRoundDailyLimit" type="number" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="5" min="0" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600">Intervalo (min)</label>
+                  <input id="postRoundInterval" type="number" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="3" min="0" step="0.5" />
+                </div>
+              </div>
+            </div>
+            
+            <!-- Question Change Ads -->
+            <div>
+              <h4 class="font-medium mb-3 text-purple-700">Anuncios por Cambio de Pregunta</h4>
+              <div class="grid grid-cols-4 gap-4">
+                <div class="flex items-center gap-2">
+                  <input id="questionChangeEnabled" type="checkbox" class="h-4 w-4" />
+                  <span class="text-sm">Habilitado</span>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600">Probabilidad (%)</label>
+                  <input id="questionChangeProbability" type="number" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="50" min="0" max="100" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600">Límite diario</label>
+                  <input id="questionChangeDailyLimit" type="number" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="8" min="0" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600">Intervalo (min)</label>
+                  <input id="questionChangeInterval" type="number" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="1" min="0" step="0.5" />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Platform Settings -->
+          <div class="bg-white p-4 rounded-lg border mb-6">
+            <h3 class="font-semibold mb-4">Configuración por Plataforma</h3>
+            
+            <div class="grid grid-cols-2 gap-6">
+              <!-- Android Settings -->
+              <div>
+                <h4 class="font-medium mb-3 text-green-600">Android</h4>
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600">Banner Ad Unit ID</label>
+                    <input id="androidBannerAdUnit" type="text" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="ca-app-pub-xxx/xxx" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600">Interstitial Ad Unit ID</label>
+                    <input id="androidInterstitialAdUnit" type="text" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="ca-app-pub-xxx/xxx" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600">Rewarded Ad Unit ID</label>
+                    <input id="androidRewardedAdUnit" type="text" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="ca-app-pub-xxx/xxx" />
+                  </div>
+                </div>
+              </div>
+              
+              <!-- iOS Settings -->
+              <div>
+                <h4 class="font-medium mb-3 text-blue-600">iOS</h4>
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600">Banner Ad Unit ID</label>
+                    <input id="iosBannerAdUnit" type="text" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="ca-app-pub-xxx/xxx" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600">Interstitial Ad Unit ID</label>
+                    <input id="iosInterstitialAdUnit" type="text" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="ca-app-pub-xxx/xxx" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600">Rewarded Ad Unit ID</label>
+                    <input id="iosRewardedAdUnit" type="text" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="ca-app-pub-xxx/xxx" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="flex gap-3">
+            <button id="btnSaveAdsConfig" class="px-6 py-2 rounded bg-green-600 text-white hover:bg-green-700">Guardar Configuración</button>
+            <button id="btnLoadAdsConfig" class="px-6 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Cargar Configuración</button>
+            <button id="btnResetAdsConfigFull" class="px-6 py-2 rounded bg-gray-600 text-white hover:bg-gray-700">Restaurar Valores por Defecto</button>
+          </div>
+          
+          <!-- Current Configuration Display -->
+          <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-semibold mb-3">Configuración Actual (JSON)</h3>
+            <pre id="currentAdsConfig" class="text-xs bg-white p-3 rounded border overflow-auto max-h-64">Cargando configuración...</pre>
+          </div>
+        </div>
       </section>
     </main>
 
@@ -609,6 +814,43 @@
     const dashMostPlayedTable = document.getElementById('dashMostPlayedTable');
     const recentEvents = document.getElementById('recentEvents');
     
+    // Ads elements
+    const tabAds = document.getElementById('tabAds');
+    const adsSection = document.getElementById('adsSection');
+    const adsManagement = document.getElementById('adsManagement');
+    const btnRefreshAds = document.getElementById('btnRefreshAds');
+    const adsSystemStatus = document.getElementById('adsSystemStatus');
+    const btnEnableAllAds = document.getElementById('btnEnableAllAds');
+    const btnDisableAllAds = document.getElementById('btnDisableAllAds');
+    const btnResetAdsConfig = document.getElementById('btnResetAdsConfig');
+    const adsGlobalEnabled = document.getElementById('adsGlobalEnabled');
+    const adsTestMode = document.getElementById('adsTestMode');
+    const adsDailyLimit = document.getElementById('adsDailyLimit');
+    const adsSessionLimit = document.getElementById('adsSessionLimit');
+    const adsMinInterval = document.getElementById('adsMinInterval');
+    const postGameEnabled = document.getElementById('postGameEnabled');
+    const postGameProbability = document.getElementById('postGameProbability');
+    const postGameDailyLimit = document.getElementById('postGameDailyLimit');
+    const postGameInterval = document.getElementById('postGameInterval');
+    const postRoundEnabled = document.getElementById('postRoundEnabled');
+    const postRoundProbability = document.getElementById('postRoundProbability');
+    const postRoundDailyLimit = document.getElementById('postRoundDailyLimit');
+    const postRoundInterval = document.getElementById('postRoundInterval');
+    const questionChangeEnabled = document.getElementById('questionChangeEnabled');
+    const questionChangeProbability = document.getElementById('questionChangeProbability');
+    const questionChangeDailyLimit = document.getElementById('questionChangeDailyLimit');
+    const questionChangeInterval = document.getElementById('questionChangeInterval');
+    const androidBannerAdUnit = document.getElementById('androidBannerAdUnit');
+    const androidInterstitialAdUnit = document.getElementById('androidInterstitialAdUnit');
+    const androidRewardedAdUnit = document.getElementById('androidRewardedAdUnit');
+    const iosBannerAdUnit = document.getElementById('iosBannerAdUnit');
+    const iosInterstitialAdUnit = document.getElementById('iosInterstitialAdUnit');
+    const iosRewardedAdUnit = document.getElementById('iosRewardedAdUnit');
+    const btnSaveAdsConfig = document.getElementById('btnSaveAdsConfig');
+    const btnLoadAdsConfig = document.getElementById('btnLoadAdsConfig');
+    const btnResetAdsConfigFull = document.getElementById('btnResetAdsConfigFull');
+    const currentAdsConfigElement = document.getElementById('currentAdsConfig');
+    
     let selectedIncidentId = null;
     const suggestionsList = document.getElementById('suggestionsList');
     const suggestionStatusFilter = document.getElementById('suggestionStatusFilter');
@@ -672,10 +914,18 @@
     tabSuggestions.addEventListener('click', () => switchToTab('suggestions'));
     tabIncidents.addEventListener('click', () => switchToTab('incidents'));
     tabStats.addEventListener('click', () => switchToTab('stats'));
+    tabAds.addEventListener('click', () => switchToTab('ads'));
     btnRefreshDashboard.addEventListener('click', loadDashboardData);
       btnRefreshSuggestions.addEventListener('click', fetchSuggestions);
         suggestionStatusFilter.addEventListener('change', fetchSuggestions);
         btnRefreshIncidents.addEventListener('click', fetchIncidents);
+        btnRefreshAds.addEventListener('click', loadAdsConfig);
+        btnEnableAllAds.addEventListener('click', enableAllAds);
+        btnDisableAllAds.addEventListener('click', disableAllAds);
+        btnResetAdsConfig.addEventListener('click', resetAdsConfig);
+        btnSaveAdsConfig.addEventListener('click', saveAdsConfig);
+        btnLoadAdsConfig.addEventListener('click', loadAdsConfig);
+        btnResetAdsConfigFull.addEventListener('click', resetAdsConfigFull);
         incidentStatusFilter.addEventListener('change', fetchIncidents);
         btnMarkPending.addEventListener('click', () => updateIncidentStatus('pending'));
         btnMarkInReview.addEventListener('click', () => updateIncidentStatus('in_review'));
@@ -698,16 +948,19 @@
       tabSuggestions.className = inactiveClass;
       tabIncidents.className = inactiveClass;
       tabStats.className = inactiveClass;
+      tabAds.className = inactiveClass;
       
       // Hide all sections
       packsSection.classList.add('hidden');
       suggestionsSection.classList.add('hidden');
       incidentsSection.classList.add('hidden');
       statsSection.classList.add('hidden');
+      adsSection.classList.add('hidden');
       packsManagement.classList.add('hidden');
       suggestionsManagement.classList.add('hidden');
       incidentsManagement.classList.add('hidden');
       statsManagement.classList.add('hidden');
+      adsManagement.classList.add('hidden');
       
       if (tab === 'packs') {
         tabPacks.className = activeClass;
@@ -730,6 +983,11 @@
         statsSection.classList.remove('hidden');
         statsManagement.classList.remove('hidden');
         loadDashboardData();
+      } else if (tab === 'ads') {
+        tabAds.className = activeClass;
+        adsSection.classList.remove('hidden');
+        adsManagement.classList.remove('hidden');
+        loadAdsConfig();
       }
     }
 
@@ -1493,6 +1751,210 @@
     }
 
     function escapeHtml(text){ if(!text) return ''; return String(text).replace(/[&<>\"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+
+    // ------------------- ADS MANAGEMENT -------------------
+    let currentAdsConfig = {
+      globalEnabled: true,
+      adTypes: {
+        postGame: { enabled: true, frequency: 1 },
+        postRound: { enabled: true, frequency: 3 },
+        questionChange: { enabled: false, frequency: 5 }
+      },
+      platforms: {
+        android: { enabled: true },
+        ios: { enabled: true },
+        web: { enabled: false }
+      },
+      limits: {
+        maxAdsPerSession: 10,
+        minTimeBetweenAds: 30
+      }
+    };
+
+    async function loadAdsConfig() {
+      try {
+        adsStatus.textContent = 'Cargando configuración...';
+        adsStatus.className = 'text-blue-600';
+        
+        const configRef = doc(db, 'adsConfig', 'settings');
+        const snap = await getDoc(configRef);
+        
+        if (snap.exists()) {
+          currentAdsConfig = { ...currentAdsConfig, ...snap.data() };
+          updateAdsUI();
+          adsStatus.textContent = 'Configuración cargada correctamente';
+          adsStatus.className = 'text-green-600';
+        } else {
+          adsStatus.textContent = 'No hay configuración guardada, usando valores por defecto';
+          adsStatus.className = 'text-yellow-600';
+          updateAdsUI();
+        }
+      } catch (error) {
+        console.error('Error loading ads config:', error);
+        adsStatus.textContent = 'Error al cargar configuración';
+        adsStatus.className = 'text-red-600';
+      }
+    }
+
+    function updateAdsUI() {
+      // Global settings
+      globalAdsEnabled.checked = currentAdsConfig.globalEnabled;
+      maxAdsPerSession.value = currentAdsConfig.limits?.maxAdsPerSession || 10;
+      minTimeBetweenAds.value = currentAdsConfig.limits?.minTimeBetweenAds || 30;
+      
+      // Ad types
+      postGameEnabled.checked = currentAdsConfig.adTypes?.postGame?.enabled || false;
+      postGameFrequency.value = currentAdsConfig.adTypes?.postGame?.frequency || 1;
+      
+      postRoundEnabled.checked = currentAdsConfig.adTypes?.postRound?.enabled || false;
+      postRoundFrequency.value = currentAdsConfig.adTypes?.postRound?.frequency || 3;
+      
+      questionChangeEnabled.checked = currentAdsConfig.adTypes?.questionChange?.enabled || false;
+      questionChangeFrequency.value = currentAdsConfig.adTypes?.questionChange?.frequency || 5;
+      
+      // Platforms
+      androidEnabled.checked = currentAdsConfig.platforms?.android?.enabled || false;
+      iosEnabled.checked = currentAdsConfig.platforms?.ios?.enabled || false;
+      webEnabled.checked = currentAdsConfig.platforms?.web?.enabled || false;
+      
+      // Update current config display
+      updateCurrentConfigDisplay();
+    }
+
+    function updateCurrentConfigDisplay() {
+      currentAdsConfigElement.innerHTML = `
+        <div class="space-y-2">
+          <div><strong>Estado Global:</strong> ${currentAdsConfig.globalEnabled ? '✅ Activado' : '❌ Desactivado'}</div>
+          <div><strong>Anuncios Post-Partida:</strong> ${currentAdsConfig.adTypes?.postGame?.enabled ? '✅' : '❌'} (cada ${currentAdsConfig.adTypes?.postGame?.frequency || 1} partidas)</div>
+          <div><strong>Anuncios Post-Ronda:</strong> ${currentAdsConfig.adTypes?.postRound?.enabled ? '✅' : '❌'} (cada ${currentAdsConfig.adTypes?.postRound?.frequency || 3} rondas)</div>
+          <div><strong>Anuncios Cambio Pregunta:</strong> ${currentAdsConfig.adTypes?.questionChange?.enabled ? '✅' : '❌'} (cada ${currentAdsConfig.adTypes?.questionChange?.frequency || 5} cambios)</div>
+          <div><strong>Plataformas:</strong> 
+            ${currentAdsConfig.platforms?.android?.enabled ? 'Android ✅' : 'Android ❌'} | 
+            ${currentAdsConfig.platforms?.ios?.enabled ? 'iOS ✅' : 'iOS ❌'} | 
+            ${currentAdsConfig.platforms?.web?.enabled ? 'Web ✅' : 'Web ❌'}
+          </div>
+          <div><strong>Límites:</strong> Max ${currentAdsConfig.limits?.maxAdsPerSession || 10}/sesión, Min ${currentAdsConfig.limits?.minTimeBetweenAds || 30}s entre anuncios</div>
+        </div>
+      `;
+    }
+
+    async function saveAdsConfig() {
+      try {
+        adsStatus.textContent = 'Guardando configuración...';
+        adsStatus.className = 'text-blue-600';
+        
+        // Update config from UI
+        currentAdsConfig = {
+          globalEnabled: globalAdsEnabled.checked,
+          adTypes: {
+            postGame: {
+              enabled: postGameEnabled.checked,
+              frequency: parseInt(postGameFrequency.value) || 1
+            },
+            postRound: {
+              enabled: postRoundEnabled.checked,
+              frequency: parseInt(postRoundFrequency.value) || 3
+            },
+            questionChange: {
+              enabled: questionChangeEnabled.checked,
+              frequency: parseInt(questionChangeFrequency.value) || 5
+            }
+          },
+          platforms: {
+            android: { enabled: androidEnabled.checked },
+            ios: { enabled: iosEnabled.checked },
+            web: { enabled: webEnabled.checked }
+          },
+          limits: {
+            maxAdsPerSession: parseInt(maxAdsPerSession.value) || 10,
+            minTimeBetweenAds: parseInt(minTimeBetweenAds.value) || 30
+          },
+          lastUpdated: new Date()
+        };
+        
+        const configRef = doc(db, 'adsConfig', 'settings');
+        await setDoc(configRef, currentAdsConfig);
+        
+        updateCurrentConfigDisplay();
+        adsStatus.textContent = 'Configuración guardada correctamente';
+        adsStatus.className = 'text-green-600';
+      } catch (error) {
+        console.error('Error saving ads config:', error);
+        adsStatus.textContent = 'Error al guardar configuración';
+        adsStatus.className = 'text-red-600';
+      }
+    }
+
+    function enableAllAds() {
+      globalAdsEnabled.checked = true;
+      postGameEnabled.checked = true;
+      postRoundEnabled.checked = true;
+      questionChangeEnabled.checked = true;
+      androidEnabled.checked = true;
+      iosEnabled.checked = true;
+      webEnabled.checked = true;
+      adsStatus.textContent = 'Todos los anuncios habilitados (recuerda guardar)';
+      adsStatus.className = 'text-green-600';
+    }
+
+    function disableAllAds() {
+      globalAdsEnabled.checked = false;
+      postGameEnabled.checked = false;
+      postRoundEnabled.checked = false;
+      questionChangeEnabled.checked = false;
+      androidEnabled.checked = false;
+      iosEnabled.checked = false;
+      webEnabled.checked = false;
+      adsStatus.textContent = 'Todos los anuncios deshabilitados (recuerda guardar)';
+      adsStatus.className = 'text-red-600';
+    }
+
+    function resetAdsConfig() {
+      const defaultConfig = {
+        globalEnabled: true,
+        adTypes: {
+          postGame: { enabled: true, frequency: 1 },
+          postRound: { enabled: true, frequency: 3 },
+          questionChange: { enabled: false, frequency: 5 }
+        },
+        platforms: {
+          android: { enabled: true },
+          ios: { enabled: true },
+          web: { enabled: false }
+        },
+        limits: {
+          maxAdsPerSession: 10,
+          minTimeBetweenAds: 30
+        }
+      };
+      
+      currentAdsConfig = defaultConfig;
+      updateAdsUI();
+      adsStatus.textContent = 'Configuración restablecida a valores por defecto (recuerda guardar)';
+      adsStatus.className = 'text-yellow-600';
+    }
+
+    async function resetAdsConfigFull() {
+      if (!confirm('¿Estás seguro de que quieres eliminar completamente la configuración de anuncios de la base de datos?')) {
+        return;
+      }
+      
+      try {
+        adsStatus.textContent = 'Eliminando configuración...';
+        adsStatus.className = 'text-red-600';
+        
+        const configRef = doc(db, 'adsConfig', 'settings');
+        await deleteDoc(configRef);
+        
+        resetAdsConfig();
+        adsStatus.textContent = 'Configuración eliminada de la base de datos';
+        adsStatus.className = 'text-red-600';
+      } catch (error) {
+        console.error('Error deleting ads config:', error);
+        adsStatus.textContent = 'Error al eliminar configuración';
+        adsStatus.className = 'text-red-600';
+      }
+    }
   </script>
 
 </body>
