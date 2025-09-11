@@ -660,7 +660,7 @@
           </div>
           
           <!-- Platform Settings -->
-          <div class="bg-white p-4 rounded-lg border mb-6">
+          <div class="bg-white p-4 rounded-lg border mb-6" hidden>
             <h3 class="font-semibold mb-4">Configuración por Plataforma</h3>
             
             <div class="grid grid-cols-2 gap-6">
@@ -705,10 +705,16 @@
           </div>
           
           <!-- Action Buttons -->
-          <div class="flex gap-3">
+          <div class="flex gap-3 flex-wrap">
             <button id="btnSaveAdsConfig" class="px-6 py-2 rounded bg-green-600 text-white hover:bg-green-700">Guardar Configuración</button>
             <button id="btnLoadAdsConfig" class="px-6 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Cargar Configuración</button>
+            <button id="btnCreateInitialAdsConfig" class="px-6 py-2 rounded bg-purple-600 text-white hover:bg-purple-700">Crear Configuración Inicial</button>
             <button id="btnResetAdsConfigFull" class="px-6 py-2 rounded bg-gray-600 text-white hover:bg-gray-700">Restaurar Valores por Defecto</button>
+          </div>
+          
+          <!-- Status Message -->
+          <div class="mt-4">
+            <p id="adsStatus" class="text-sm font-medium">Listo para cargar configuración</p>
           </div>
           
           <!-- Current Configuration Display -->
@@ -901,6 +907,45 @@
       storageBucket: "verdadreto-bec6a.firebasestorage.app",
       messagingSenderId: "938969209658",
       appId: "1:938969209658:web:534282f57a8ff381c00e03"
+    }
+
+    async function createInitialAdsConfig() {
+      try {
+        adsStatus.textContent = 'Creando configuración inicial...';
+        adsStatus.className = 'text-blue-600';
+        
+        const defaultConfig = {
+          globalEnabled: true,
+          testMode: false,
+          limits: {
+            dailyLimit: 50,
+            maxAdsPerSession: 10,
+            minTimeBetweenAds: 30
+          },
+          adTypes: {
+            postGame: { enabled: true, frequency: 1 },
+            postRound: { enabled: true, frequency: 3 },
+            questionChange: { enabled: false, frequency: 5 }
+          },
+          platforms: {
+            android: { enabled: true },
+            ios: { enabled: true },
+            web: { enabled: false }
+          }
+        };
+        
+        const configRef = doc(db, 'config', 'adsSettings');
+        await setDoc(configRef, defaultConfig);
+        
+        currentAdsConfig = defaultConfig;
+        updateAdsUI();
+        adsStatus.textContent = 'Configuración inicial creada correctamente';
+        adsStatus.className = 'text-green-600';
+      } catch (error) {
+        console.error('Error creating initial ads config:', error);
+        adsStatus.textContent = 'Error al crear configuración inicial';
+        adsStatus.className = 'text-red-600';
+      }
     };
 
     const app = initializeApp(firebaseConfig);
@@ -1012,6 +1057,38 @@
     const btnResetWelcomeConfig = document.getElementById('btnResetWelcomeConfig');
     const currentWelcomeConfig = document.getElementById('currentWelcomeConfig');
     
+    // Ads elements
+    const btnRefreshAds = document.getElementById('btnRefreshAds');
+    const btnEnableAllAds = document.getElementById('btnEnableAllAds');
+    const btnDisableAllAds = document.getElementById('btnDisableAllAds');
+    const btnSaveAdsConfig = document.getElementById('btnSaveAdsConfig');
+    const btnLoadAdsConfig = document.getElementById('btnLoadAdsConfig');
+    const btnCreateInitialAdsConfig = document.getElementById('btnCreateInitialAdsConfig');
+    const btnResetAdsConfig = document.getElementById('btnResetAdsConfig');
+    const btnResetAdsConfigFull = document.getElementById('btnResetAdsConfigFull');
+    const adsStatus = document.getElementById('adsStatus');
+    const adsSystemStatus = document.getElementById('adsSystemStatus');
+    // const globalAdsEnabled = document.getElementById('globalAdsEnabled'); // ID no existe, usar adsGlobalEnabled
+    const adsGlobalEnabled = document.getElementById('adsGlobalEnabled');
+    const adsTestMode = document.getElementById('adsTestMode');
+    const adsDailyLimit = document.getElementById('adsDailyLimit');
+    const adsSessionLimit = document.getElementById('adsSessionLimit');
+    const adsMinInterval = document.getElementById('adsMinInterval');
+    const postGameEnabled = document.getElementById('postGameEnabled');
+    const postRoundEnabled = document.getElementById('postRoundEnabled');
+    const questionChangeEnabled = document.getElementById('questionChangeEnabled');
+    const currentAdsConfigElement = document.getElementById('currentAdsConfig');
+    
+    // Variables for elements that might not exist in HTML but are used in code
+    const maxAdsPerSession = document.getElementById('maxAdsPerSession') || { value: 10 };
+    const minTimeBetweenAds = document.getElementById('minTimeBetweenAds') || { value: 30 };
+    const postGameFrequency = document.getElementById('postGameFrequency') || { value: 1 };
+    const postRoundFrequency = document.getElementById('postRoundFrequency') || { value: 3 };
+    const questionChangeFrequency = document.getElementById('questionChangeFrequency') || { value: 5 };
+    const androidEnabled = document.getElementById('androidEnabled') || { checked: true };
+    const iosEnabled = document.getElementById('iosEnabled') || { checked: true };
+    const webEnabled = document.getElementById('webEnabled') || { checked: false };
+    
     let selectedIncidentId = null;
     const suggestionsList = document.getElementById('suggestionsList');
     const suggestionStatusFilter = document.getElementById('suggestionStatusFilter');
@@ -1087,6 +1164,7 @@
         btnResetAdsConfig.addEventListener('click', resetAdsConfig);
         btnSaveAdsConfig.addEventListener('click', saveAdsConfig);
         btnLoadAdsConfig.addEventListener('click', loadAdsConfig);
+        btnCreateInitialAdsConfig.addEventListener('click', createInitialAdsConfig);
         btnResetAdsConfigFull.addEventListener('click', resetAdsConfigFull);
         btnRefreshWelcome.addEventListener('click', loadWelcomeConfig);
         btnEnableWelcome.addEventListener('click', enableWelcomeScreen);
@@ -1953,7 +2031,12 @@
         adsStatus.textContent = 'Cargando configuración...';
         adsStatus.className = 'text-blue-600';
         
-        const configRef = doc(db, 'adsConfig', 'settings');
+        if (adsSystemStatus) {
+          adsSystemStatus.textContent = 'Cargando...';
+          adsSystemStatus.className = 'text-lg font-bold text-blue-800';
+        }
+        
+        const configRef = doc(db, 'config', 'adsSettings');
         const snap = await getDoc(configRef);
         
         if (snap.exists()) {
@@ -1961,38 +2044,46 @@
           updateAdsUI();
           adsStatus.textContent = 'Configuración cargada correctamente';
           adsStatus.className = 'text-green-600';
+          
+          if (adsSystemStatus) {
+            const isEnabled = currentAdsConfig.globalEnabled;
+            adsSystemStatus.textContent = isEnabled ? 'Activo' : 'Inactivo';
+            adsSystemStatus.className = `text-lg font-bold ${isEnabled ? 'text-green-600' : 'text-red-600'}`;
+          }
         } else {
           adsStatus.textContent = 'No hay configuración guardada, usando valores por defecto';
           adsStatus.className = 'text-yellow-600';
           updateAdsUI();
+          
+          if (adsSystemStatus) {
+            adsSystemStatus.textContent = 'Sin configurar';
+            adsSystemStatus.className = 'text-lg font-bold text-yellow-600';
+          }
         }
       } catch (error) {
         console.error('Error loading ads config:', error);
         adsStatus.textContent = 'Error al cargar configuración';
         adsStatus.className = 'text-red-600';
+        
+        if (adsSystemStatus) {
+          adsSystemStatus.textContent = 'Error';
+          adsSystemStatus.className = 'text-lg font-bold text-red-600';
+        }
       }
     }
 
     function updateAdsUI() {
       // Global settings
-      globalAdsEnabled.checked = currentAdsConfig.globalEnabled;
-      maxAdsPerSession.value = currentAdsConfig.limits?.maxAdsPerSession || 10;
-      minTimeBetweenAds.value = currentAdsConfig.limits?.minTimeBetweenAds || 30;
+      if (adsGlobalEnabled) adsGlobalEnabled.checked = currentAdsConfig.globalEnabled || false;
+      if (adsSessionLimit) adsSessionLimit.value = currentAdsConfig.limits?.maxAdsPerSession || 10;
+      if (adsMinInterval) adsMinInterval.value = currentAdsConfig.limits?.minTimeBetweenAds || 30;
+      if (adsDailyLimit) adsDailyLimit.value = currentAdsConfig.limits?.dailyLimit || 50;
+      if (adsTestMode) adsTestMode.checked = currentAdsConfig.testMode || false;
       
       // Ad types
-      postGameEnabled.checked = currentAdsConfig.adTypes?.postGame?.enabled || false;
-      postGameFrequency.value = currentAdsConfig.adTypes?.postGame?.frequency || 1;
-      
-      postRoundEnabled.checked = currentAdsConfig.adTypes?.postRound?.enabled || false;
-      postRoundFrequency.value = currentAdsConfig.adTypes?.postRound?.frequency || 3;
-      
-      questionChangeEnabled.checked = currentAdsConfig.adTypes?.questionChange?.enabled || false;
-      questionChangeFrequency.value = currentAdsConfig.adTypes?.questionChange?.frequency || 5;
-      
-      // Platforms
-      androidEnabled.checked = currentAdsConfig.platforms?.android?.enabled || false;
-      iosEnabled.checked = currentAdsConfig.platforms?.ios?.enabled || false;
-      webEnabled.checked = currentAdsConfig.platforms?.web?.enabled || false;
+      if (postGameEnabled) postGameEnabled.checked = currentAdsConfig.adTypes?.postGame?.enabled || false;
+      if (postRoundEnabled) postRoundEnabled.checked = currentAdsConfig.adTypes?.postRound?.enabled || false;
+      if (questionChangeEnabled) questionChangeEnabled.checked = currentAdsConfig.adTypes?.questionChange?.enabled || false;
       
       // Update current config display
       updateCurrentConfigDisplay();
@@ -2022,7 +2113,7 @@
         
         // Update config from UI
         currentAdsConfig = {
-          globalEnabled: globalAdsEnabled.checked,
+          globalEnabled: adsGlobalEnabled ? adsGlobalEnabled.checked : false,
           adTypes: {
             postGame: {
               enabled: postGameEnabled.checked,
@@ -2049,7 +2140,7 @@
           lastUpdated: new Date()
         };
         
-        const configRef = doc(db, 'adsConfig', 'settings');
+        const configRef = doc(db, 'config', 'adsSettings');
         await setDoc(configRef, currentAdsConfig);
         
         updateCurrentConfigDisplay();
@@ -2063,7 +2154,7 @@
     }
 
     function enableAllAds() {
-      globalAdsEnabled.checked = true;
+      if (adsGlobalEnabled) adsGlobalEnabled.checked = true;
       postGameEnabled.checked = true;
       postRoundEnabled.checked = true;
       questionChangeEnabled.checked = true;
@@ -2075,7 +2166,7 @@
     }
 
     function disableAllAds() {
-      globalAdsEnabled.checked = false;
+      if (adsGlobalEnabled) adsGlobalEnabled.checked = false;
       postGameEnabled.checked = false;
       postRoundEnabled.checked = false;
       questionChangeEnabled.checked = false;
@@ -2120,7 +2211,7 @@
         adsStatus.textContent = 'Eliminando configuración...';
         adsStatus.className = 'text-red-600';
         
-        const configRef = doc(db, 'adsConfig', 'settings');
+        const configRef = doc(db, 'config', 'adsSettings');
         await deleteDoc(configRef);
         
         resetAdsConfig();
