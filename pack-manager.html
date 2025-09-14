@@ -751,10 +751,14 @@
             <!-- Referral Progress Module -->
             <div class="border-b pb-4 mb-4">
               <h4 class="font-medium mb-3 text-blue-700">Progreso de Referidos</h4>
-              <div class="grid grid-cols-3 gap-4">
+              <div class="grid grid-cols-4 gap-4">
                 <div class="flex items-center gap-2">
                   <input id="referralModuleEnabled" type="checkbox" class="h-4 w-4" />
                   <span class="text-sm">Habilitado</span>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600">Progreso actual</label>
+                  <input id="referralCurrent" type="number" class="mt-1 block w-full rounded border px-2 py-1 text-sm" placeholder="0" min="0" />
                 </div>
                 <div>
                   <label class="block text-xs font-medium text-gray-600">Objetivo de referidos</label>
@@ -1027,6 +1031,7 @@
     const welcomeShowOnce = document.getElementById('welcomeShowOnce');
     const welcomeMessage = document.getElementById('welcomeMessage');
     const referralModuleEnabled = document.getElementById('referralModuleEnabled');
+    const referralCurrent = document.getElementById('referralCurrent');
     const referralGoal = document.getElementById('referralGoal');
     const referralButtonText = document.getElementById('referralButtonText');
     const messagesModuleEnabled = document.getElementById('messagesModuleEnabled');
@@ -2179,6 +2184,7 @@
       modules: {
         referralProgress: {
           enabled: false,
+          current: 0,
           goal: 10,
           buttonText: 'Compartir App'
         },
@@ -2226,6 +2232,7 @@
       welcomeMessage.value = currentWelcomeConfigData.message;
       
       referralModuleEnabled.checked = currentWelcomeConfigData.modules.referralProgress.enabled;
+      referralCurrent.value = currentWelcomeConfigData.modules.referralProgress.current || 0;
       referralGoal.value = currentWelcomeConfigData.modules.referralProgress.goal;
       referralButtonText.value = currentWelcomeConfigData.modules.referralProgress.buttonText;
       
@@ -2258,6 +2265,7 @@
           modules: {
             referralProgress: {
               enabled: referralModuleEnabled.checked,
+              current: parseInt(referralCurrent.value) || 0,
               goal: parseInt(referralGoal.value) || 10,
               buttonText: referralButtonText.value || 'Compartir App'
             },
@@ -2330,7 +2338,14 @@
                 ${currentWelcomeConfigData.modules.referralProgress.enabled ? `
                   <div class="bg-blue-50 p-3 rounded-lg mb-3">
                     <h4 class="font-semibold text-blue-800">Progreso de Referidos</h4>
-                    <p class="text-sm text-blue-600">Meta: ${currentWelcomeConfigData.modules.referralProgress.goal} referidos</p>
+                    <p class="text-sm text-blue-600 mb-2">Meta: ${currentWelcomeConfigData.modules.referralProgress.goal} referidos</p>
+                    
+                    <!-- Barra de progreso -->
+                    <div class="w-full bg-blue-200 rounded-full h-3 mb-3">
+                      <div class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: ${Math.min((${currentWelcomeConfigData.modules.referralProgress.current} / ${currentWelcomeConfigData.modules.referralProgress.goal}) * 100, 100)}%"></div>
+                    </div>
+                    <p class="text-xs text-blue-700 mb-2">${currentWelcomeConfigData.modules.referralProgress.current} de ${currentWelcomeConfigData.modules.referralProgress.goal} referidos completados</p>
+                    
                     <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded text-sm">
                       ${currentWelcomeConfigData.modules.referralProgress.buttonText}
                     </button>
@@ -2408,6 +2423,7 @@
         modules: {
           referralProgress: {
             enabled: false,
+            current: 0,
             goal: 10,
             buttonText: 'Compartir App'
           },
