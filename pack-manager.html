@@ -342,25 +342,7 @@
             </div>
           </div>
           
-          <!-- Pack Configuration for Suggestions -->
-          <div class="bg-purple-50 p-4 rounded-lg">
-            <h3 class="font-semibold mb-3 text-purple-800">Configuración de Packs por Sugerencias</h3>
-            <div class="grid grid-cols-3 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Pack</label>
-                <select id="packForSuggestions" class="mt-1 block w-full rounded-md border px-3 py-2">
-                  <option value="">Seleccionar pack...</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Sugerencias requeridas</label>
-                <input id="requiredSuggestions" type="number" class="mt-1 block w-full rounded-md border px-3 py-2" placeholder="0" min="0" />
-              </div>
-              <div class="flex items-end">
-                <button id="btnConfigureSuggestionPack" class="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700">Configurar</button>
-              </div>
-            </div>
-          </div>
+
         </div>
         
         <!-- Incidents Management Section -->
@@ -1096,9 +1078,7 @@
     const suggestionDetails = document.getElementById('suggestionDetails');
     const btnUpdateSuggestion = document.getElementById('btnUpdateSuggestion');
     const btnDeleteSuggestion = document.getElementById('btnDeleteSuggestion');
-    const packForSuggestions = document.getElementById('packForSuggestions');
-    const requiredSuggestions = document.getElementById('requiredSuggestions');
-    const btnConfigureSuggestionPack = document.getElementById('btnConfigureSuggestionPack');
+
 
     let selectedPackId = null;
     let editingItemId = null;
@@ -1181,7 +1161,7 @@
         btnDeleteIncident.addEventListener('click', deleteIncident);
       btnUpdateSuggestion.addEventListener('click', updateSuggestionStatus);
       btnDeleteSuggestion.addEventListener('click', deleteSuggestion);
-      btnConfigureSuggestionPack.addEventListener('click', configureSuggestionPack);
+
     }
 
     function switchToTab(tab) {
@@ -1221,7 +1201,7 @@
         suggestionsSection.classList.remove('hidden');
         suggestionsManagement.classList.remove('hidden');
         fetchSuggestions();
-        loadPacksForSuggestions();
+
       } else if (tab === 'incidents') {
         tabIncidents.className = activeClass;
         incidentsSection.classList.remove('hidden');
@@ -1406,42 +1386,9 @@
       document.getElementById('rejectedSuggestions').textContent = rejected;
     }
 
-    async function loadPacksForSuggestions() {
-      const snap = await getDocs(collection(db, 'packs'));
-      packForSuggestions.innerHTML = '<option value="">Seleccionar pack...</option>';
-      
-      snap.forEach(d => {
-        const pack = d.data();
-        const option = document.createElement('option');
-        option.value = d.id;
-        option.textContent = pack.name || d.id;
-        packForSuggestions.appendChild(option);
-      });
-    }
 
-    async function configureSuggestionPack() {
-      const packId = packForSuggestions.value;
-      const requiredCount = parseInt(requiredSuggestions.value) || 0;
-      
-      if (!packId) {
-        alert('Selecciona un pack');
-        return;
-      }
-      
-      try {
-        await updateDoc(doc(db, 'packs', packId), {
-          isSuggestionUnlockable: true,
-          requiredSuggestions: requiredCount
-        });
-        
-        alert(`Pack configurado: se requieren ${requiredCount} sugerencias aceptadas para desbloquearlo`);
-        packForSuggestions.value = '';
-        requiredSuggestions.value = '';
-      } catch (error) {
-        console.error('Error configuring pack:', error);
-        alert('Error al configurar el pack');
-      }
-    }
+
+
 
     // ------------------- CRUD PACKS -------------------
     async function fetchPacks() {
