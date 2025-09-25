@@ -255,7 +255,10 @@
           <div class="mt-6 grid grid-cols-2 gap-4">
             <div>
               <div class="flex items-center justify-between mb-2">
-                <h3 class="font-semibold">Preguntas</h3>
+                <div class="flex items-center gap-2">
+                  <h3 class="font-semibold">Preguntas</h3>
+                  <span id="questionsCounter" class="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">0</span>
+                </div>
                 <button id="btnAddQuestion" class="text-sm px-3 py-1 rounded bg-indigo-600 text-white">Añadir</button>
               </div>
               <div id="questionsList" class="max-h-[40vh] overflow-auto scrollbar-thin space-y-2"></div>
@@ -263,7 +266,10 @@
 
             <div>
               <div class="flex items-center justify-between mb-2">
-                <h3 class="font-semibold">Retos</h3>
+                <div class="flex items-center gap-2">
+                  <h3 class="font-semibold">Retos</h3>
+                  <span id="daresCounter" class="text-xs bg-rose-100 text-rose-800 px-2 py-1 rounded-full">0</span>
+                </div>
                 <button id="btnAddDare" class="text-sm px-3 py-1 rounded bg-rose-600 text-white">Añadir</button>
               </div>
               <div id="daresList" class="max-h-[40vh] overflow-auto scrollbar-thin space-y-2"></div>
@@ -1493,6 +1499,8 @@
       requiredReferralsInput.value = 0;
       questionsList.innerHTML='';
       daresList.innerHTML='';
+      document.getElementById('questionsCounter').textContent = '0';
+      document.getElementById('daresCounter').textContent = '0';
     }
 
     // ------------------- CRUD ITEMS -------------------
@@ -1505,6 +1513,10 @@
 	  // Limpiar listas
 	  questionsList.innerHTML = '';
 	  daresList.innerHTML = '';
+
+	  // Contadores para preguntas y retos
+	  let questionsCount = 0;
+	  let daresCount = 0;
 
 	  qSnap.forEach(d => {
 		const it = d.data();
@@ -1521,9 +1533,18 @@
 							<button data-id="${id}" class="delBtn text-sm px-2 py-1 rounded bg-red-500 text-white">Eliminar</button>
 						  </div>`;
 
-		if(it.type === 'question') questionsList.appendChild(node);
-		else if(it.type === 'dare') daresList.appendChild(node);
+		if(it.type === 'question') {
+		  questionsList.appendChild(node);
+		  questionsCount++;
+		} else if(it.type === 'dare') {
+		  daresList.appendChild(node);
+		  daresCount++;
+		}
 	  });
+
+	  // Actualizar contadores en la interfaz
+	  document.getElementById('questionsCounter').textContent = questionsCount.toString();
+	  document.getElementById('daresCounter').textContent = daresCount.toString();
 
 	  // Attach handlers
 	  document.querySelectorAll('.editBtn').forEach(b => b.addEventListener('click', ()=> openEditItem(b.dataset.id)));
