@@ -740,6 +740,10 @@
                   <input id="welcomeShowOnce" type="checkbox" class="h-5 w-5" />
                   <span class="text-sm">Mostrar solo una vez por sesión</span>
                 </div>
+                <div class="flex items-center gap-3 mt-2">
+                  <input id="welcomeShowOnAppStart" type="checkbox" class="h-5 w-5" />
+                  <span class="text-sm">Mostrar al iniciar la aplicación</span>
+                </div>
               </div>
             </div>
             
@@ -1035,6 +1039,7 @@
     const welcomeStatus = document.getElementById('welcomeStatus');
     const welcomeEnabled = document.getElementById('welcomeEnabled');
     const welcomeShowOnce = document.getElementById('welcomeShowOnce');
+    const welcomeShowOnAppStart = document.getElementById('welcomeShowOnAppStart');
     const welcomeMessage = document.getElementById('welcomeMessage');
     const referralModuleEnabled = document.getElementById('referralModuleEnabled');
     const referralCurrent = document.getElementById('referralCurrent');
@@ -2201,6 +2206,7 @@
     let currentWelcomeConfigData = {
       enabled: false,
       showOncePerSession: true,
+      showOnAppStart: true,
       message: '¡Bienvenido a la aplicación! Disfruta de la experiencia...',
       modules: {
         referralProgress: {
@@ -2250,6 +2256,7 @@
     function updateWelcomeUI() {
       welcomeEnabled.checked = currentWelcomeConfigData.enabled;
       welcomeShowOnce.checked = currentWelcomeConfigData.showOncePerSession;
+      welcomeShowOnAppStart.checked = currentWelcomeConfigData.showOnAppStart || false;
       welcomeMessage.value = currentWelcomeConfigData.message;
       
       referralModuleEnabled.checked = currentWelcomeConfigData.modules.referralProgress.enabled;
@@ -2282,6 +2289,7 @@
         const configData = {
           enabled: welcomeEnabled.checked,
           showOncePerSession: welcomeShowOnce.checked,
+          showOnAppStart: welcomeShowOnAppStart.checked,
           message: welcomeMessage.value,
           modules: {
             referralProgress: {
